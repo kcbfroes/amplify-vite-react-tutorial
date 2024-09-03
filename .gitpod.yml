@@ -4,8 +4,13 @@
 
 # Learn more from ready-to-use templates: https://www.gitpod.io/docs/introduction/getting-started/quickstart
 
+image:
+  file: .gitpod.Dockerfile
+
 tasks:
   - init: npm install && npm run build
     command: npm run dev
 
-
+ports:
+  - port: 5173
+    onOpen: open-preview
