@@ -8,8 +8,32 @@ image:
   file: .gitpod.DockerFile
 
 tasks:
-  - init: npm install && npm run build
-    command: npm run dev
+  - name: NPM
+    init: npm install && npm run build
+    command: |
+      gp sync-await amplify
+      npm run dev
+        
+  - name: Amplify Setup
+    command: |
+      echo "Amplify Setup"
+      echo ""
+      lenSAK=${#AWS_SECRET_ACCESS_KEY}
+      echo "Environment Variables..."
+      echo "   AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
+      if [ "$lenSAK" -eq 0 ]; then
+        echo "   AWS_SECRET_ACCESS_KEY is NOT VALUED!"
+      else
+        echo "   AWS_SECRET_ACCESS_KEY: (not shown but has a value)"
+      fi 
+      echo "   AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION"
+      echo ""
+      if [ ! -d "$HOME/.aws" ]; then
+        echo "About to create the AWS Credential information"
+        bash createAWSCredentials.bash
+        echo "AWS Credentials Completed"
+      fi
+      gp sync-done amplify
 
 ports:
   - port: 5173
