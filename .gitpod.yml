@@ -19,12 +19,18 @@ tasks:
       echo "Amplify Setup"
       echo ""
       lenSAK=${#AWS_SECRET_ACCESS_KEY}
+      lenSessionToken=${#AWS_SESSION_TOKEN}
       echo "Environment Variables..."
       echo "   AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
       if [ "$lenSAK" -eq 0 ]; then
         echo "   AWS_SECRET_ACCESS_KEY is NOT VALUED!"
       else
-        echo "   AWS_SECRET_ACCESS_KEY: (not shown but has a value)"
+        echo "   AWS_SECRET_ACCESS_KEY: $lenSAK characters long"
+      fi 
+      if [ "$lenSessionToken" -eq 0 ]; then
+        echo "   AWS_SESSION_TOKEN is NOT VALUED!"
+      else
+        echo "   AWS_SESSION_TOKEN: $lenSessionToken characters long"
       fi 
       echo "   AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION"
       echo ""
