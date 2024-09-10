@@ -39,9 +39,9 @@ tasks:
       echo "   AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION"
       echo ""
       if [ ! -d "$HOME/.aws" ]; then
-        echo "About to create the AWS Credential information"
-        bash createAWSCredentials.bash
-        echo "AWS Credentials Completed"
+        echo "About to create the AWS Files"
+        bash createAWSFiles.bash
+        echo "AWS Create Files Completed"
       fi
       gp sync-done amplify
 
