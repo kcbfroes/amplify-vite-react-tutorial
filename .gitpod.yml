@@ -13,6 +13,7 @@ tasks:
     command: |
       gp sync-await amplify
       npm run dev
+      npx ampx sandbox --profile default
         
   - name: Amplify Setup
     command: |
