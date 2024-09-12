@@ -12,12 +12,14 @@ tasks:
     init: npm install && npm run build
     command: |
       gp sync-await amplify
+      gp sync-await sandbox
       npm run dev      
 
-  -name: Start Sandbox
-   command: |
-     gp sync-await amplify
-     npx ampx sandbox --profile default
+  - name: Start Sandbox
+    command: |
+      gp sync-await amplify
+      npx ampx sandbox --profile default
+      gp sync-done sandbox
         
   - name: Amplify Setup
     command: |
