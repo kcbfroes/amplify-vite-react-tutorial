@@ -8,19 +8,35 @@ image:
   file: .gitpod.DockerFile
 
 tasks:
-  - name: NPM
-    init: npm install && npm run build
+  - name: Install NPM
+    init: npm install
     command: |
-      gp sync-await amplify
-      gp sync-await sandbox
-      npm run dev      
-
+      gp sync-done installNPM
+  
   - name: Start Sandbox
     command: |
       gp sync-await amplify
-      npx ampx sandbox --profile default
+      gp sync-await installNPM
+
+      echo "Starting the Sandbox (in the background)"
+      npx ampx sandbox --profile default &  # Run command in the background, task resumes with next statement
+      
+      # Wait for the amplify_outputs.json file to be created, which signals this task is complete
+      while [ ! -f amplify_outputs.json ]; do
+        echo "   Waiting for amplify_outputs.json to appear..."
+        sleep 5  # Check every 5 seconds
+      done
+      echo "amplify_outputs.json found! Releasing next step..."
       gp sync-done sandbox
-        
+  
+  - name: Run DevServer
+    command: |
+      gp sync-await amplify
+      gp sync-await installNPM
+      gp sync-await sandbox
+      npm run build
+      npm run dev
+  
   - name: Amplify Setup
     command: |
       echo "Amplify Setup"
