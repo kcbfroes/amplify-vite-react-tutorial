@@ -1,6 +1,6 @@
 import { TextField, CheckboxField, Button } from '@aws-amplify/ui-react';
 import { SetStateAction, useState } from 'react';
-import { TodoProps } from './Interfaces';
+import { emptyToDo, TodoProps } from './Interfaces';
 
 export default function TodoTS(props: TodoProps) {    
 
@@ -10,19 +10,21 @@ export default function TodoTS(props: TodoProps) {
     type AnEvent = { target: { value: SetStateAction<string | null | undefined>; }; }
 
     const handleDescriptionChange = (event: AnEvent) => {
-        setContent(event.target.value)
+        setContent('' + event.target.value)
     }
     const handleIsDoneChange = (event: AnEvent) => {
-        setIsDone(event.target.value ? true : false)
+        console.log("handleIsDone: ", event.target.value)
+        setIsDone(event.target.value == 'yes' ? true : false)
     }
 
     const handleSave = () => {
         props.todo.content = content;
         props.todo.isDone = isDone;
-        props.handleOnClose();
+        console.log("TodoTS Save: ", props.todo);
+        props.handleOnClose(props.todo, false);
     }
     const handleCancel = () => {
-        props.handleOnClose();
+        props.handleOnClose(emptyToDo, true);
     }
 
     return (
@@ -37,7 +39,7 @@ export default function TodoTS(props: TodoProps) {
             <CheckboxField                
                 label='Is Done?'
                 name='isDone'
-                value={isDone ? 'yes' : 'no'}  
+                value={isDone ? "no" : "yes"}  
                 onChange={handleIsDoneChange} 
             />
         
