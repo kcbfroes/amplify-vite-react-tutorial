@@ -14,10 +14,13 @@ function App() {
   const [createOpen, setCreateOpen] = useState(false)
 
   useEffect(() => {
-    console.log("App, getting todo list");
     client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
+      next: (data) => {
+          setTodos([...data.items])
+          console.log("New Todo: ", todos)
+      },
     });
+    console.log("todo list: ", todos);
   }, []);
 
   //------------------------------ Create ------------------------------
@@ -35,7 +38,11 @@ function App() {
   const createTodo = (aTodo: Schema["Todo"]["type"], cancelled:boolean) => {
     if ( !cancelled ) {
       console.log("Creating a Todo: ", aTodo)
-      client.models.Todo.create(aTodo);
+
+      client.models.Todo.create({ content:aTodo.content, isDone:aTodo.isDone})
+        .then(result => console.log("Create successful", result))
+        .catch(error => console.log("Error creating todo: ", error));
+
     }
     setCreateOpen(false);
   }
