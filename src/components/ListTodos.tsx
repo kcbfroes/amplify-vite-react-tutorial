@@ -39,6 +39,15 @@ export default function ListTodos ( props: ListTodosProps ) {
             props.onUpdate(changedTodo)            
         }
     }
+
+    const toggleDone = (todo: Schema["Todo"]["type"]) => {
+        if (todo.isDone) {
+            todo.isDone = false
+        }else{
+            todo.isDone = true
+        }
+        props.onUpdate(todo)
+    }
     
     return (
         <div>
@@ -46,7 +55,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                 <TableHead>
                     <TableRow>
                         <TableCell as="th">Description</TableCell>
-                        <TableCell as="th">Is Done?</TableCell>
+                        <TableCell as="th">Is Done? (click me)</TableCell>
                         <TableCell colSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle'}} as="th">Action</TableCell>
                         <TableCell as="th">ID</TableCell>
                     </TableRow>
@@ -55,7 +64,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                     {props.todoList.map((todo: any) => (
                         <TableRow key={todo.id}>
                             <TableCell>{todo.content}</TableCell>
-                            <TableCell>{todo.isDone ? "Yes" : "No"}</TableCell>
+                            <TableCell onClick={() => toggleDone(todo)}>{todo.isDone ? "Yes" : "No"}</TableCell>
                             <TableCell onClick={() => props.onDelete(todo.id)} >Delete</TableCell>
                             <TableCell onClick={() => editTodo(todo)}>Edit</TableCell>
                             <TableCell>{todo.id}</TableCell>
