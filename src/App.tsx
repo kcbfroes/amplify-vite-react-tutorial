@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { Authenticator } from '@aws-amplify/ui-react'
+import { Authenticator, Heading, Text } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
 import ListTodos from "./components/ListTodos";
 import TodoTS from "./components/TodoTS"
@@ -12,14 +12,24 @@ const client = generateClient<Schema>();
 function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
   const [createOpen, setCreateOpen] = useState(false)
+  const [allData, setAllData] = useState(false)
 
   useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => {
-          setTodos([...data.items])
-          console.log("In App, useEffect New Todo: ", todos)
+    /*
+      While data is syncing from the cloud, snapshots will contain all of 
+      the items synced so far and an isSynced = false. 
+      When the sync process is complete, a snapshot will be emitted with
+      all the records in the local store and an isSynced = true.
+    */
+    const sub =client.models.Todo.observeQuery().subscribe({
+      next: ({ items, isSynced }) => {
+          setTodos([...items])
+          console.log("In App, useEffect refreshed Todos: ", todos)          
+          console.log("In App, useEffect isSynced: ", isSynced)
+          setAllData(isSynced)
       },
     });
+    return () => sub.unsubscribe();
   }, []);
 
   //------------------------------ Create ------------------------------
@@ -58,18 +68,28 @@ function App() {
     client.models.Todo.delete({ id })
   }
 
+  const showDataLoading = () => {
+    if (allData == true) {
+      return(<Text variation="success">All data is loaded</Text>)
+    }else{
+      return(<Text variation="info">data is loading...</Text>)
+    }    
+  }
+
   return (        
     <Authenticator>
       {({ signOut, user }) => (
         <React.Fragment>
           <main>
-            <h1>{user?.signInDetails?.loginId}'s todos</h1>
-            
-            <h1>My todos</h1>
+            <Heading fontWeight={"bold"} level={1} >
+              {user?.signInDetails?.loginId}'s todos
+            </Heading>
             
             <button onClick={() => {setCreateOpen(true)}}>+ new</button>
 
             <ListTodos todoList={todos} onDelete={deleteTodo} onUpdate={updateTodo}/>
+
+            {showDataLoading() }
 
             <button onClick={signOut}>Sign out</button>
 

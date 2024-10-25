@@ -6,6 +6,7 @@ import {
     TableBody,
     TableHead,
     TableRow,
+    Heading,
   } from '@aws-amplify/ui-react';
 import TodoTS from "./TodoTS";
 import { useState } from "react";
