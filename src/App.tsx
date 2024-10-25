@@ -17,10 +17,9 @@ function App() {
     client.models.Todo.observeQuery().subscribe({
       next: (data) => {
           setTodos([...data.items])
-          console.log("New Todo: ", todos)
+          console.log("In App, useEffect New Todo: ", todos)
       },
     });
-    console.log("todo list: ", todos);
   }, []);
 
   //------------------------------ Create ------------------------------
@@ -37,11 +36,11 @@ function App() {
   }
   const createTodo = (aTodo: Schema["Todo"]["type"], cancelled:boolean) => {
     if ( !cancelled ) {
-      console.log("Creating a Todo: ", aTodo)
+      console.log("In App, Creating a Todo: ", aTodo)
 
       client.models.Todo.create({ content:aTodo.content, isDone:aTodo.isDone})
-        .then(result => console.log("Create successful", result))
-        .catch(error => console.log("Error creating todo: ", error));
+        .then(result => console.log("In App, Create successful", result))
+        .catch(error => console.log("In App, Error creating todo: ", error));
 
     }
     setCreateOpen(false);
@@ -49,12 +48,13 @@ function App() {
 
   //------------------------------ Edit/Update ------------------------------
   const updateTodo = (todo: Schema["Todo"]["type"]) => {
-    console.log("editTodo ", todo)
+    console.log("In App, editTodo, update: ", todo)
     client.models.Todo.update(todo)
   }
 
   //------------------------------ Delete ------------------------------
   const deleteTodo = (id: string) => {
+    console.log("In App, deleteTodo with id: ", id)
     client.models.Todo.delete({ id })
   }
 

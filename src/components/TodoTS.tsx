@@ -12,18 +12,20 @@ export default function TodoTS(props: TodoProps) {
     const handleDescriptionChange = (event: AnEvent) => {
         setContent('' + event.target.value)
     }
-    const handleIsDoneChange = (event: AnEvent) => {
-        console.log("handleIsDone: ", event.target.value)
-        setIsDone(event.target.value == 'yes' ? true : false)
+    const handleIsDoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("In TodoTS, handleIsDone old value is: ", event.target.value)
+        console.log("In TodoTS, handleIsDone checkbox checked? ", event.target.checked)
+        setIsDone(event.target.checked)
     }
 
     const handleSave = () => {
         props.todo.content = content;
         props.todo.isDone = isDone;
-        console.log("TodoTS Save: ", props.todo);
+        console.log("In TodoTS, Save clicked: ", props.todo);
         props.handleOnClose(props.todo, false);
     }
     const handleCancel = () => {
+        console.log("In TodoTS, Cancel clicked: ");
         props.handleOnClose(emptyToDo, true);
     }
 
@@ -39,7 +41,8 @@ export default function TodoTS(props: TodoProps) {
             <CheckboxField                
                 label='Is Done?'
                 name='isDone'
-                value={isDone ? "no" : "yes"}  
+                value={isDone ? "Yes" : "No"}
+                checked={isDone ? true : false}
                 onChange={handleIsDoneChange} 
             />
         

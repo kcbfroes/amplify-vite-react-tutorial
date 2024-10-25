@@ -1,5 +1,5 @@
 import { Schema } from "../../amplify/data/resource";
-import { ListTodosProps } from "./Interfaces";
+import { emptyToDo, ListTodosProps } from "./Interfaces";
 import {
     Table,
     TableCell,
@@ -9,20 +9,29 @@ import {
   } from '@aws-amplify/ui-react';
 import TodoTS from "./TodoTS";
 import { useState } from "react";
-import { booleanToCloudFormation } from "aws-cdk-lib";
   
 export default function ListTodos ( props: ListTodosProps ) {
 
     const [editOpen, setEditOpen] = useState(false)
+    const [todo, setTodo] = useState(emptyToDo)
 
     const editTodo = (todo: Schema["Todo"]["type"]) => {
+        console.log("In ListTodos, editTodo was clicked")
         setEditOpen(true)
-        return (
-            <div>
-                <TodoTS todo={todo} handleOnClose={editTodoClose} />
-            </div>
-        )
+        setTodo(todo)
     } 
+    const ShowEditPopup = () => {
+        if (editOpen == true) {
+            console.log("In ListTodos, showing Edit popup")
+            return (
+                <div>
+                    <TodoTS todo={todo} handleOnClose={editTodoClose} />
+                </div>
+            )
+        }else{
+            return (<></>)
+        }
+    }
 
     const editTodoClose = (changedTodo: Schema["Todo"]["type"], cancelled: boolean) => {
         setEditOpen(false)
@@ -46,7 +55,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                     {props.todoList.map((todo: any) => (
                         <TableRow key={todo.id}>
                             <TableCell>{todo.content}</TableCell>
-                            <TableCell>{todo.isDone ? "" : "Yes"}</TableCell>
+                            <TableCell>{todo.isDone ? "Yes" : "No"}</TableCell>
                             <TableCell onClick={() => props.onDelete(todo.id)} >Delete</TableCell>
                             <TableCell onClick={() => editTodo(todo)}>Edit</TableCell>
                             <TableCell>{todo.id}</TableCell>
@@ -54,6 +63,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                     ))}
                 </TableBody>
             </Table>
+            {ShowEditPopup()}
         </div>
     );
 }
