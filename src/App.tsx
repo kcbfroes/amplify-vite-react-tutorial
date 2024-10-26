@@ -60,9 +60,9 @@ function App() {
           .then(result => handleResult(result, "Todo Create"))
           .catch(error => handleError(error, "Todo Create"));
       }
+    }
     setCreateOpen(false);
     setWithError(false)
-    }
   }
 
   //------------------------------ Edit/Update ------------------------------
@@ -83,8 +83,7 @@ function App() {
     console.log("App, handleResult, result: ", result)
     if (result.errors) handleError(result.errors, where)    
   }
-  const handleError = (errors: Array<GraphQLFormattedError>, where: string ) => {
-    console.log("App, handleError, errors: ", errors)
+  const handleError = (errors: Array<GraphQLFormattedError>, where: string ) => {    
     var allErrors: string = ''
     for (const err of errors) {
       allErrors += err.message + " (" + where + ")"
