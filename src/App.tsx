@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { Authenticator, Heading, Text } from '@aws-amplify/ui-react'
+import { Alert, Authenticator, CheckboxField, Flex, Heading, Text } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
 import ListTodos from "./components/ListTodos";
 import TodoTS from "./components/TodoTS"
-import { emptyToDo } from "./components/Interfaces";
+import { emptyToDo, GraphQLFormattedError } from "./components/Interfaces";
 
 const client = generateClient<Schema>();
 
@@ -13,6 +13,8 @@ function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
   const [createOpen, setCreateOpen] = useState(false)
   const [allData, setAllData] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [withError, setWithError] = useState(false)
 
   useEffect(() => {
     /*
@@ -48,12 +50,19 @@ function App() {
     if ( !cancelled ) {
       console.log("In App, Creating a Todo: ", aTodo)
 
-      client.models.Todo.create({ content:aTodo.content, isDone:aTodo.isDone})
-        .then(result => console.log("In App, Create successful", result))
-        .catch(error => console.log("In App, Error creating todo: ", error));
-
-    }
+      if (withError == false) {
+        client.models.Todo.create({  content:aTodo.content, isDone:aTodo.isDone})
+          .then(result => handleResult(result, "Todo Create"))
+          .catch(error => handleError(error, "Todo Create"));
+      }else{  
+        //this call will generate a runtime error, which should be shown on the screen.   
+        client.models.Todo.create(aTodo)
+          .then(result => handleResult(result, "Todo Create"))
+          .catch(error => handleError(error, "Todo Create"));
+      }
     setCreateOpen(false);
+    setWithError(false)
+    }
   }
 
   //------------------------------ Edit/Update ------------------------------
@@ -66,8 +75,25 @@ function App() {
   const deleteTodo = (id: string) => {
     console.log("In App, deleteTodo with id: ", id)
     client.models.Todo.delete({ id })
+  }  
+
+  //------------------------------ Handle Todo Errors ------------------------------
+  const handleResult = (result: any, where: string ) => {
+    setErrorMessage('')
+    console.log("App, handleResult, result: ", result)
+    if (result.errors) handleError(result.errors, where)    
+  }
+  const handleError = (errors: Array<GraphQLFormattedError>, where: string ) => {
+    console.log("App, handleError, errors: ", errors)
+    var allErrors: string = ''
+    for (const err of errors) {
+      allErrors += err.message + " (" + where + ")"
+    }
+    console.log("App, handleError, allErrors: ", allErrors)
+    setErrorMessage(allErrors)
   }
 
+   //------------------------------ Optional UI Items ------------------------------
   const showDataLoading = () => {
     if (allData == true) {
       return(<Text variation="success">All data is loaded</Text>)
@@ -76,6 +102,19 @@ function App() {
     }    
   }
 
+  const showErrors = () => {
+    if (errorMessage.length > 0) {
+      return(
+        <Alert isDismissible={true} hasIcon={true} heading="Application Error">
+          {errorMessage}
+        </Alert>
+      )
+    }else{
+      return(<></>)
+    }    
+  }
+
+  //------------------------------ UI ------------------------------
   return (        
     <Authenticator>
       {({ signOut, user }) => (
@@ -85,7 +124,17 @@ function App() {
               {user?.signInDetails?.loginId}'s todos
             </Heading>
             
-            <button onClick={() => {setCreateOpen(true)}}>+ new</button>
+            <Flex direction="row" wrap="nowrap" gap="1rem">
+              <button onClick={() => {setCreateOpen(true)}}>Create Todo</button>
+
+              <CheckboxField                
+                label='with Error?'
+                name='withError'
+                value={withError ? "Yes" : "No"}
+                checked={withError ? true : false}
+                onChange={() => setWithError(true)} 
+              />
+            </Flex>            
 
             <ListTodos todoList={todos} onDelete={deleteTodo} onUpdate={updateTodo}/>
 
@@ -95,6 +144,9 @@ function App() {
 
           </main>
           {newTodo()}
+        <div>
+          {showErrors()}
+        </div>
         </React.Fragment>
       )}
     </Authenticator>

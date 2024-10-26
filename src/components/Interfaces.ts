@@ -18,3 +18,15 @@ export const emptyToDo: Schema["Todo"]["type"] = {
     createdAt: "",
     updatedAt: ""
   };
+
+  export interface GraphQLFormattedError {
+    message: string;
+    locations?: Array<{ line: number; column: number }>;
+    path?: Array<string | number>;
+    extensions?: { [key: string]: any };
+}
+
+export interface appErrorMsg {
+    errMsg: string
+    where: string
+}
