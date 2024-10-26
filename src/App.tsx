@@ -34,9 +34,16 @@ function App() {
     return () => sub.unsubscribe();
   }, []);
 
+  const resetTodo = () => {
+    emptyToDo.content = ''
+    emptyToDo.isDone = false
+  }
+
   //------------------------------ Create ------------------------------
   const newTodo = () => {    
     if (createOpen) {
+      resetTodo()
+      console.log("App, newTodo, emptyToDo: ", emptyToDo)
       return (
         <div>
           <TodoTS todo={emptyToDo} handleOnClose={createTodo} />
@@ -104,7 +111,7 @@ function App() {
   const showErrors = () => {
     if (errorMessage.length > 0) {
       return(
-        <Alert isDismissible={true} hasIcon={true} heading="Application Error">
+        <Alert variation="error" isDismissible={false} hasIcon={true} heading="Application Error">
           {errorMessage}
         </Alert>
       )

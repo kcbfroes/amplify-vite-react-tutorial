@@ -9,11 +9,6 @@ export default function TodoTS(props: TodoProps) {
 
     type AnEvent = { target: { value: SetStateAction<string | null | undefined>; }; }
 
-    const reset = () => {
-        setContent('')
-        setIsDone(false)
-    }
-
     const handleDescriptionChange = (event: AnEvent) => {
         setContent('' + event.target.value)
     }
@@ -31,7 +26,6 @@ export default function TodoTS(props: TodoProps) {
     }
     const handleCancel = () => {
         console.log("In TodoTS, Cancel clicked");
-        reset()
         props.handleOnClose(emptyToDo, true);
     }
 
