@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Alert, Authenticator, CheckboxField, Flex, Heading, Text } from '@aws-amplify/ui-react'
+import Modal from "./components/Modal";
 import '@aws-amplify/ui-react/styles.css'
 import ListTodos from "./components/ListTodos";
 import TodoTS from "./components/TodoTS"
@@ -14,6 +15,7 @@ function App() {
   const [createOpen, setCreateOpen] = useState(false)
   const [allData, setAllData] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [errorHeading, setErrorHeading] = useState('')
   const [withError, setWithError] = useState(false)
 
   useEffect(() => {
@@ -40,14 +42,14 @@ function App() {
   }
 
   //------------------------------ Create ------------------------------
-  const newTodo = () => {    
+  const newTodo = () => {
     if (createOpen) {
       resetTodo()
       console.log("App, newTodo, emptyToDo: ", emptyToDo)
       return (
-        <div>
+        <Modal isOpen={createOpen}>
           <TodoTS todo={emptyToDo} handleOnClose={createTodo} />
-        </div>
+        </Modal>
       )
     }else{
       return(<></>);
@@ -59,13 +61,13 @@ function App() {
 
       if (withError == false) {
         client.models.Todo.create({  content:aTodo.content, isDone:aTodo.isDone})
-          .then(result => handleResult(result, "Todo Create"))
-          .catch(error => handleError(error, "Todo Create"));
+          .then(result => handleResult(result, aTodo, "Todo Create"))
+          .catch(error => handleError(error, aTodo, "Todo Create"));
       }else{  
         //this call will generate a runtime error, which should be shown on the screen.   
         client.models.Todo.create(aTodo)
-          .then(result => handleResult(result, "Todo Create"))
-          .catch(error => handleError(error, "Todo Create"));
+          .then(result => handleResult(result, aTodo, "Todo Create"))
+          .catch(error => handleError(error, aTodo, "Todo Create"));
       }
     }
     setCreateOpen(false);
@@ -85,18 +87,20 @@ function App() {
   }  
 
   //------------------------------ Handle Todo Errors ------------------------------
-  const handleResult = (result: any, where: string ) => {
+  const handleResult = (result: any, todo: Schema["Todo"]["type"], where: string ) => {
     setErrorMessage('')
     console.log("App, handleResult, result: ", result)
-    if (result.errors) handleError(result.errors, where)    
+    if (result.errors) handleError(result.errors, todo, where)    
   }
-  const handleError = (errors: Array<GraphQLFormattedError>, where: string ) => {    
+  const handleError = (errors: Array<GraphQLFormattedError>, todo: Schema["Todo"]["type"], where: string ) => {    
     var allErrors: string = ''
+    setErrorHeading("Unexpeceted Error with Todo: '" + todo.content + "'")
     for (const err of errors) {
       allErrors += err.message + " (" + where + ")"
     }
     console.log("App, handleError, allErrors: ", allErrors)
     setErrorMessage(allErrors)
+    //console.log("handleError, errorMessage.length=", errorMessage.length)
   }
 
    //------------------------------ Optional UI Items ------------------------------
@@ -111,7 +115,7 @@ function App() {
   const showErrors = () => {
     if (errorMessage.length > 0) {
       return(
-        <Alert variation="error" isDismissible={false} hasIcon={true} heading="Application Error">
+        <Alert variation="error" isDismissible={false} hasIcon={true} heading={errorHeading}>
           {errorMessage}
         </Alert>
       )
@@ -130,17 +134,19 @@ function App() {
               {user?.signInDetails?.loginId}'s todos
             </Heading>
             
-            <Flex direction="row" wrap="nowrap" gap="1rem">
+            <Flex direction="row" wrap="nowrap" gap="1rem" backgroundColor='green.20' padding='10px'>
               <button onClick={() => {setCreateOpen(true)}}>Create Todo</button>
 
-              <CheckboxField                
+              <CheckboxField  
                 label='with Error?'
                 name='withError'
                 value={withError ? "Yes" : "No"}
                 checked={withError ? true : false}
                 onChange={() => setWithError(true)} 
               />
-            </Flex>            
+            </Flex>
+
+            {newTodo()}
 
             <ListTodos todoList={todos} onDelete={deleteTodo} onUpdate={updateTodo}/>
 
@@ -149,7 +155,6 @@ function App() {
             <button onClick={signOut}>Sign out</button>
 
           </main>
-          {newTodo()}
         <div>
           {showErrors()}
         </div>

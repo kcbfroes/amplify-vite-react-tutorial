@@ -11,6 +11,11 @@ export interface ListTodosProps {
     onUpdate: (todo: Schema["Todo"]["type"]) => void
 }
 
+export interface ModalProps {
+    isOpen: boolean
+    children: any
+}
+
 export const emptyToDo: Schema["Todo"]["type"] = {
     id: '',
     content: '', 
