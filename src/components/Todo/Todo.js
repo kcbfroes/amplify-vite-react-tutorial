@@ -1,6 +1,6 @@
 import { TextField, CheckboxField, Button } from '@aws-amplify/ui-react';
 import React, { useState } from 'react';
-import { TodoProps } from './Interfaces';
+import { TodoProps } from '../Interfaces';
 
 export default function Todo(todo, handleOnClose) {    
 

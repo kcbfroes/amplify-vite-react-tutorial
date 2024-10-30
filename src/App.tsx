@@ -4,8 +4,8 @@ import { generateClient } from "aws-amplify/data";
 import { Alert, AlertVariations, Authenticator, Badge, CheckboxField, Flex, Heading, Text } from '@aws-amplify/ui-react'
 import Modal from "./components/Modal";
 import '@aws-amplify/ui-react/styles.css'
-import ListTodos from "./components/ListTodos";
-import TodoTS from "./components/TodoTS"
+import ListTodos from "./components/Todo/ListTodos";
+import TodoTS from "./components/Todo/TodoTS"
 import { emptyToDo, GraphQLFormattedError } from "./components/Interfaces";
 import { CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/data';
 import { Hub } from 'aws-amplify/utils';
@@ -143,20 +143,28 @@ function App() {
     setAlertVisible(true)
   }
   
-  const handleTodoDeleteResult = (result: any, todo_id: string, what: string ) => {
+  const handleTodoDeleteResult = (result: any, todo_id: string ) => {
     setAlertMsg('')
-    if (result.errors) {
-      handleTodoDeleteError(result.errors, todo_id, what)
+    var theTodo: string = ''
+    var todo = findTodoById(todo_id);
+    if (todo) {
+      theTodo = todo.content
     }else{
-      setAlertHeading(what)
+      theTodo = "{ID '" + todo_id + "' was not found}"
+    }
+
+    if (result.errors) {
+      handleTodoDeleteError(result.errors, theTodo)
+    }else{
+      setAlertHeading("Delete Todo")
       setAlertVariation("success")
       setAlertVisible(true)
-      setAlertMsg(what + " was successful")
+      setAlertMsg(theTodo + " was successful")
     }
   }
-  const handleTodoDeleteError = (errors: Array<GraphQLFormattedError>, todo_id: string, what: string ) => {    
-    var allErrors: string = ''
-    setAlertHeading("Unexpeceted Error " + what)
+  const handleTodoDeleteError = (errors: Array<GraphQLFormattedError>, theTodo: string ) => {
+    var allErrors: string = ""
+    setAlertHeading("Unexpeceted Error trying to delete Todo: '" + theTodo + "'")
     for (const err of errors) {
       allErrors += err.message
     }
@@ -191,6 +199,8 @@ function App() {
       return(<></>)
     }    
   }
+
+  const findTodoById = (id: string) => { return todos.find(todo => todo.id == id) }
 
   //------------------------------ UI ------------------------------
   return (        

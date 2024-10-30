@@ -82,6 +82,28 @@
                 ]
               }
             },
+            "assignedToId": {
+              "name": "assignedToId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "assignedTo": {
+              "name": "assignedTo",
+              "isArray": false,
+              "type": {
+                "model": "Person"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "assignedToId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -160,6 +182,22 @@
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
                   "ownerId"
+                ]
+              }
+            },
+            "assignedTodos": {
+              "name": "assignedTodos",
+              "isArray": true,
+              "type": {
+                "model": "Todo"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "assignedToId"
                 ]
               }
             },

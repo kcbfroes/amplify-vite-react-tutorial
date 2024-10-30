@@ -1,12 +1,11 @@
-import { Schema } from "../../amplify/data/resource";
-import { emptyToDo, ListTodosProps } from "./Interfaces";
+import { Schema } from "../../../amplify/data/resource";
+import { emptyToDo, ListTodosProps } from "../Interfaces";
 import {
     Table,
     TableCell,
     TableBody,
     TableHead,
     TableRow,
-    Heading,
   } from '@aws-amplify/ui-react';
 import TodoTS from "./TodoTS";
 import { useState } from "react";
