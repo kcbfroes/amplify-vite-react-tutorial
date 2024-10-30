@@ -1,5 +1,5 @@
 import { Schema } from "../../../amplify/data/resource";
-import { emptyToDo, ListTodosProps } from "../Interfaces";
+import { ListTodosProps } from "../Interfaces";
 import {
     Table,
     TableCell,
@@ -13,7 +13,7 @@ import { useState } from "react";
 export default function ListTodos ( props: ListTodosProps ) {
 
     const [editOpen, setEditOpen] = useState(false)
-    const [todo, setTodo] = useState(emptyToDo)
+    const [todo, setTodo] = useState({})
 
     const editTodo = (todo: Schema["Todo"]["type"]) => {
         console.log("In ListTodos, editTodo was clicked")

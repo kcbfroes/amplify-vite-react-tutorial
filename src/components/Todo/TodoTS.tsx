@@ -1,32 +1,27 @@
 import { TextField, CheckboxField, Button } from '@aws-amplify/ui-react';
-import { SetStateAction, useState } from 'react';
-import { emptyToDo, TodoProps } from '../Interfaces';
+import React, { useEffect, useState } from 'react';
+import { TodoProps, TodoType } from '../Interfaces';
 
-export default function TodoTS(props: TodoProps) {    
+const TodoTS: React.FC<TodoProps> = ({ todo, handleOnClose}) => {    
 
-    const [content, setContent] = useState(props.todo.content);
-    const [isDone, setIsDone] = useState(props.todo.isDone);
+    const [content, setContent] = useState<string>();
+    const [isDone, setIsDone] = useState<boolean>();
 
-    type AnEvent = { target: { value: SetStateAction<string | null | undefined>; }; }
-
-    const handleDescriptionChange = (event: AnEvent) => {
-        setContent('' + event.target.value)
-    }
-    const handleIsDoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log("In TodoTS, handleIsDone old value is: ", event.target.value)
-        console.log("In TodoTS, handleIsDone checkbox checked? ", event.target.checked)
-        setIsDone(event.target.checked)
-    }
+    useEffect(() => {
+        if (todo) {
+            setContent(todo.content);
+            const done = todo.isDone ? true : false
+            setIsDone(done);
+        }
+    }, [todo]);
 
     const handleSave = () => {
-        props.todo.content = content;
-        props.todo.isDone = isDone;
-        console.log("In TodoTS, Save clicked: ", props.todo);
-        props.handleOnClose(props.todo, false);
+        const todoUpdated: Partial<TodoType> = {content, isDone}
+        handleOnClose(todoUpdated, false);
     }
     const handleCancel = () => {
-        console.log("In TodoTS, Cancel clicked");
-        props.handleOnClose(emptyToDo, true);
+        const emptyTodo: Partial<TodoType> = {}
+        handleOnClose(emptyTodo, true);
     }
 
     return (
@@ -35,7 +30,7 @@ export default function TodoTS(props: TodoProps) {
                 label='Description'
                 name='todoDescription'
                 value={'' + content}
-                onChange={handleDescriptionChange}
+                onChange={(e) => setContent(e.target.value)}
             />
 
             <CheckboxField                
@@ -43,7 +38,7 @@ export default function TodoTS(props: TodoProps) {
                 name='isDone'
                 value={isDone ? "Yes" : "No"}
                 checked={isDone ? true : false}
-                onChange={handleIsDoneChange} 
+                onChange={(e) => setIsDone(e.target.checked)} 
             />
         
             <Button onClick={handleCancel}>Cancel</Button>
@@ -51,3 +46,5 @@ export default function TodoTS(props: TodoProps) {
         </div>
     );
 }
+
+export default TodoTS;

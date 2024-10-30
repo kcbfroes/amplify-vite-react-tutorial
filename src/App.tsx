@@ -6,7 +6,7 @@ import Modal from "./components/Modal";
 import '@aws-amplify/ui-react/styles.css'
 import ListTodos from "./components/Todo/ListTodos";
 import TodoTS from "./components/Todo/TodoTS"
-import { emptyToDo, GraphQLFormattedError } from "./components/Interfaces";
+import { GraphQLFormattedError, TodoType, PersonType } from "./components/Interfaces";
 import { CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/data';
 import { Hub } from 'aws-amplify/utils';
 
@@ -14,7 +14,7 @@ const client = generateClient<Schema>();
 
 function App() {
   
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [todos, setTodos] = useState<Array<TodoType>>([]);
   const [createOpen, setCreateOpen] = useState(false)
   const [allData, setAllData] = useState(false)
   const [withError, setWithError] = useState(false)
@@ -43,11 +43,6 @@ function App() {
     return () => sub.unsubscribe();
   }, []);
 
-  const resetTodo = () => {
-    emptyToDo.content = ''
-    emptyToDo.isDone = false
-  }
-
   //------------------------------ Monitor Subscription Connection Status ------------------------------
   Hub.listen('api', (data: any) => {
     const { payload } = data;
@@ -72,30 +67,28 @@ function App() {
   //------------------------------ Create ------------------------------
   const newTodo = () => {
     if (createOpen) {
-      resetTodo()
-      console.log("App, newTodo, emptyToDo: ", emptyToDo)
       return (
         <Modal isOpen={createOpen}>
-          <TodoTS todo={emptyToDo} handleOnClose={createTodo} />
+          <TodoTS handleOnClose={createTodo} />
         </Modal>
       )
     }else{
       return(<></>);
     }
   }
-  const createTodo = (aTodo: Schema["Todo"]["type"], cancelled:boolean) => {
+  const createTodo = (aTodo: Partial<TodoType>, cancelled:boolean) => {
     if ( !cancelled ) {
       console.log("In App, Creating a Todo: ", aTodo)
 
       if (withError == false) {
-        client.models.Todo.create({  content:aTodo.content, isDone:aTodo.isDone})
-          .then(result => handleTodoResult(result, aTodo, "Create a ToDo: " + aTodo.content))
-          .catch(error => handleTodoError(error, aTodo, "Create a ToDo: " + aTodo.content));
-      }else{  
+        client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
+          .then(result => handleTodoResult(result, "Create a ToDo: " + aTodo.content))
+          .catch(error => handleTodoError(error, "Create a ToDo: " + aTodo.content));
+      }else{
         //this call will generate a runtime error, which should be shown on the screen.   
-        client.models.Todo.create(aTodo)
-          .then(result => handleTodoResult(result, aTodo, "Create a ToDo: " + aTodo.content))
-          .catch(error => handleTodoError(error, aTodo, "Create a ToDo: " + aTodo.content));
+        client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
+          .then(result => handleTodoResult(result, "Create a ToDo: " + aTodo.content))
+          .catch(error => handleTodoError(error, "Create a ToDo: " + aTodo.content));
       }
     }
     setCreateOpen(false);
@@ -104,27 +97,27 @@ function App() {
   }
 
   //------------------------------ Edit/Update ------------------------------
-  const updateTodo = (todo: Schema["Todo"]["type"]) => {
+  const updateTodo = (todo: TodoType) => {
     console.log("In App, editTodo, update: ", todo)
     client.models.Todo.update(todo)
-      .then(result => handleTodoResult(result, todo, "Create a ToDo: " + todo.content))
-      .catch(error => handleTodoError(error, todo, "Create a ToDo: " + todo.content));
+      .then(result => handleTodoResult(result, "Create a ToDo: " + todo.content))
+      .catch(error => handleTodoError(error, "Create a ToDo: " + todo.content));
   }
 
   //------------------------------ Delete ------------------------------
   const deleteTodo = (id: string) => {
     console.log("In App, deleteTodo with id: ", id)
     client.models.Todo.delete({ id })
-      .then(result => handleTodoDeleteResult(result, id, "Deleting a ToDo"))
-      .catch(error => handleTodoDeleteError(error, id, "Deleting a ToDo"));
+      .then(result => handleTodoDeleteResult(result, id))
+      .catch(error => handleTodoDeleteError(error, id));
   }  
 
   //------------------------------ Handle Todo Actions ------------------------------
-  const handleTodoResult = (result: any, todo: Schema["Todo"]["type"], what: string ) => {
+  const handleTodoResult = (result: any, what: string ) => {
     setAlertMsg('')
     console.log("App, handleResult, result: ", result)
     if (result.errors) {
-      handleTodoError(result.errors, todo, what)
+      handleTodoError(result.errors, what)
     }else{
       setAlertHeading(what)
       setAlertVariation("success")
@@ -132,7 +125,7 @@ function App() {
       setAlertMsg(what + " was successful")
     }
   }
-  const handleTodoError = (errors: Array<GraphQLFormattedError>, todo: Schema["Todo"]["type"], what: string ) => {    
+  const handleTodoError = (errors: Array<GraphQLFormattedError>, what: string ) => {    
     var allErrors: string = ''
     setAlertHeading("Unexpeceted Error")
     for (const err of errors) {

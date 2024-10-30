@@ -1,14 +1,23 @@
 import { Schema } from "../../amplify/data/resource";
 
+export type TodoType = Schema["Todo"]["type"]
+export type PersonType = Schema["Person"]["type"]
+
 export interface TodoProps {
-    todo: Schema["Todo"]["type"]
-    handleOnClose: (value: Schema["Todo"]["type"], cancel:boolean) => void
+    todo?: TodoType
+    handleOnClose: (value: Partial<TodoType>, cancel:boolean) => void
 }
 
 export interface ListTodosProps {
-    todoList: Array<Schema["Todo"]["type"]>
+    todoList: Array<TodoType>
     onDelete: (todoID: string) => void
-    onUpdate: (todo: Schema["Todo"]["type"]) => void
+    onUpdate: (todo: TodoType) => void
+}
+
+export interface PersonListProps {
+    personList: Array<PersonType>
+    onDelete: (PersonID: string) => void
+    onUpdate: (person: PersonType) => void
 }
 
 export interface ModalProps {
@@ -16,15 +25,7 @@ export interface ModalProps {
     children: any
 }
 
-export const emptyToDo: Schema["Todo"]["type"] = {
-    id: '',
-    content: '', 
-    isDone: false,
-    createdAt: "",
-    updatedAt: ""
-  };
-
-  export interface GraphQLFormattedError {
+export interface GraphQLFormattedError {
     message: string;
     locations?: Array<{ line: number; column: number }>;
     path?: Array<string | number>;
