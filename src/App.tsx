@@ -17,7 +17,6 @@ function App() {
   const [todos, setTodos] = useState<Array<TodoType>>([]);
   const [createOpen, setCreateOpen] = useState(false)
   const [allData, setAllData] = useState(false)
-  const [withError, setWithError] = useState(false)
   const [alertHeading, setAlertHeading] = useState('')
   const [alertMsg, setAlertMsg] = useState('')
   const [alertVariation, setAlertVariation] = useState<AlertVariations>("info")
@@ -78,58 +77,46 @@ function App() {
   }
   const createTodo = (aTodo: Partial<TodoType>, cancelled:boolean) => {
     if ( !cancelled ) {
-      console.log("In App, Creating a Todo: ", aTodo)
-
-      if (withError == false) {
-        client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
-          .then(result => handleTodoResult(result, "Create a ToDo: " + aTodo.content))
-          .catch(error => handleTodoError(error, "Create a ToDo: " + aTodo.content));
-      }else{
-        //this call will generate a runtime error, which should be shown on the screen.   
-        client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
-          .then(result => handleTodoResult(result, "Create a ToDo: " + aTodo.content))
-          .catch(error => handleTodoError(error, "Create a ToDo: " + aTodo.content));
-      }
+      client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
+        .then(result => handleTodoResult(result, "Create a ToDo", aTodo))
+        .catch(error => handleTodoError(error, "Create a ToDo", aTodo));
     }
     setCreateOpen(false);
-    setWithError(false)
 
   }
 
   //------------------------------ Edit/Update ------------------------------
   const updateTodo = (todo: TodoType) => {
-    console.log("In App, editTodo, update: ", todo)
     client.models.Todo.update(todo)
-      .then(result => handleTodoResult(result, "Create a ToDo: " + todo.content))
-      .catch(error => handleTodoError(error, "Create a ToDo: " + todo.content));
+      .then(result => handleTodoResult(result, "Update a ToDo", todo))
+      .catch(error => handleTodoError(error, "Update a ToDo: ", todo));
   }
 
   //------------------------------ Delete ------------------------------
   const deleteTodo = (id: string) => {
-    console.log("In App, deleteTodo with id: ", id)
-    client.models.Todo.delete({ id })
+   client.models.Todo.delete({ id })
       .then(result => handleTodoDeleteResult(result, id))
       .catch(error => handleTodoDeleteError(error, id));
   }  
 
   //------------------------------ Handle Todo Actions ------------------------------
-  const handleTodoResult = (result: any, what: string ) => {
+  const handleTodoResult = (result: any, header: string, todo: Partial<TodoType> ) => {
     setAlertMsg('')
     console.log("App, handleResult, result: ", result)
     if (result.errors) {
-      handleTodoError(result.errors, what)
+      handleTodoError(result.errors, header, todo)
     }else{
-      setAlertHeading(what)
+      setAlertHeading(header)
       setAlertVariation("success")
       setAlertVisible(true)
-      setAlertMsg(what + " was successful")
+      setAlertMsg("'" + todo.content + "' was successful")
     }
   }
-  const handleTodoError = (errors: Array<GraphQLFormattedError>, what: string ) => {    
+  const handleTodoError = (errors: Array<GraphQLFormattedError>, header: string, todo: Partial<TodoType>) => {    
     var allErrors: string = ''
-    setAlertHeading("Unexpeceted Error")
+    setAlertHeading(header + " Unexpeceted Error")
     for (const err of errors) {
-      allErrors += err.message + " (" + what + ")"
+      allErrors += "'" + todo.content + "' -->" + err.message
     }
     setAlertMsg(allErrors)
     setAlertVariation("error")
@@ -152,7 +139,7 @@ function App() {
       setAlertHeading("Delete Todo")
       setAlertVariation("success")
       setAlertVisible(true)
-      setAlertMsg(theTodo + " was successful")
+      setAlertMsg("'" + theTodo + "' was successful")
     }
   }
   const handleTodoDeleteError = (errors: Array<GraphQLFormattedError>, theTodo: string ) => {
@@ -207,14 +194,6 @@ function App() {
             
             <Flex direction="row" wrap="nowrap" gap="1rem" backgroundColor='green.20' padding='10px'>
               <button onClick={() => {setCreateOpen(true)}}>Create Todo</button>
-
-              <CheckboxField  
-                label='with Error?'
-                name='withError'
-                value={withError ? "Yes" : "No"}
-                checked={withError ? true : false}
-                onChange={() => setWithError(true)} 
-              />
 
               <Badge size="large" variation={subConnectVariation}>
                 {subConnectMsg}

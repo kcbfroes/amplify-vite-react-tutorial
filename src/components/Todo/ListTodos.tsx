@@ -1,5 +1,5 @@
 import { Schema } from "../../../amplify/data/resource";
-import { ListTodosProps } from "../Interfaces";
+import { ListTodosProps, TodoType } from "../Interfaces";
 import {
     Table,
     TableCell,
@@ -13,16 +13,14 @@ import { useState } from "react";
 export default function ListTodos ( props: ListTodosProps ) {
 
     const [editOpen, setEditOpen] = useState(false)
-    const [todo, setTodo] = useState({})
+    const [todo, setTodo] = useState<TodoType>()
 
-    const editTodo = (todo: Schema["Todo"]["type"]) => {
-        console.log("In ListTodos, editTodo was clicked")
+    const editTodo = (todo: TodoType) => {
         setEditOpen(true)
         setTodo(todo)
     } 
     const ShowEditPopup = () => {
         if (editOpen == true) {
-            console.log("In ListTodos, showing Edit popup")
             return (
                 <div>
                     <TodoTS todo={todo} handleOnClose={editTodoClose} />
@@ -33,10 +31,11 @@ export default function ListTodos ( props: ListTodosProps ) {
         }
     }
 
-    const editTodoClose = (changedTodo: Schema["Todo"]["type"], cancelled: boolean) => {
+    const editTodoClose = (changedTodo:Partial<TodoType>, cancelled: boolean) => {
         setEditOpen(false)
         if (cancelled == false) {
-            props.onUpdate(changedTodo)            
+            const mergedTodo: TodoType = Object.assign({}, todo, changedTodo)
+            props.onUpdate(mergedTodo)            
         }
     }
 
@@ -61,7 +60,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {props.todoList.map((todo: any) => (
+                    {props.todoList.map((todo: TodoType) => (
                         <TableRow key={todo.id}>
                             <TableCell>{todo.content}</TableCell>
                             <TableCell onClick={() => toggleDone(todo)}>{todo.isDone ? "Yes" : "No"}</TableCell>
