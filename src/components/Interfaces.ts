@@ -3,6 +3,11 @@ import { Schema } from "../../amplify/data/resource";
 export type TodoType = Schema["Todo"]["type"]
 export type PersonType = Schema["Person"]["type"]
 
+export interface NavigationProps {
+    currentItem: string
+    onSelectItem: (item: string) => void
+}
+
 export interface TodoProps {
     todo?: TodoType
     handleOnClose: (value: Partial<TodoType>, cancel:boolean) => void

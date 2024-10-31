@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { Alert, AlertVariations, Authenticator, Badge, CheckboxField, Flex, Heading, Text } from '@aws-amplify/ui-react'
+import { Alert, AlertVariations, Authenticator, Badge, Button, Card, CheckboxField, Divider, Flex, Grid, Heading, Table, TableBody, TableCell, TableHead, TableRow, Text, useTheme } from '@aws-amplify/ui-react'
 import Modal from "./components/Modal";
 import '@aws-amplify/ui-react/styles.css'
 import ListTodos from "./components/Todo/ListTodos";
@@ -9,12 +9,19 @@ import TodoTS from "./components/Todo/TodoTS"
 import { GraphQLFormattedError, TodoType, PersonType } from "./components/Interfaces";
 import { CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/data';
 import { Hub } from 'aws-amplify/utils';
+import NavMenu from "./components/Main/NavMenu";
 
 const client = generateClient<Schema>();
 
 function App() {
   
+  //data lists
   const [todos, setTodos] = useState<Array<TodoType>>([]);
+
+  //Nav Menu
+  const [currentNavItem, setCurrentNavItem] = useState('ToDos')
+
+  //All other
   const [createOpen, setCreateOpen] = useState(false)
   const [allData, setAllData] = useState(false)
   const [alertHeading, setAlertHeading] = useState('')
@@ -23,6 +30,8 @@ function App() {
   const [alertVisible, setAlertVisible] = useState(false)
   const [subConnectVariation, setSubConnectVariation] = useState<AlertVariations>("info")
   const [subConnectMsg, setsubConnectMsg] = useState<ConnectionState>()
+
+  const { tokens } = useTheme();
 
   useEffect(() => {
     /*
@@ -34,8 +43,6 @@ function App() {
     const sub =client.models.Todo.observeQuery().subscribe({
       next: ({ items, isSynced }) => {
           setTodos([...items])
-          console.log("In App, useEffect refreshed Todos: ", items)          
-          console.log("In App, useEffect isSynced: ", isSynced)
           setAllData(isSynced)
       },
     });
@@ -102,7 +109,6 @@ function App() {
   //------------------------------ Handle Todo Actions ------------------------------
   const handleTodoResult = (result: any, header: string, todo: Partial<TodoType> ) => {
     setAlertMsg('')
-    console.log("App, handleResult, result: ", result)
     if (result.errors) {
       handleTodoError(result.errors, header, todo)
     }else{
@@ -154,7 +160,27 @@ function App() {
   }
 
    //------------------------------ Optional UI Items ------------------------------
-  const showDataLoading = () => {
+  const navigationMenu = () => {
+    return (
+      <NavMenu currentItem={currentNavItem} onSelectItem={onSelectNavItem}></NavMenu>
+    )
+  }
+
+  const onSelectNavItem = (navItemName: string) => {
+    setCurrentNavItem(navItemName)
+  }
+
+  const mainContent = () => {
+    if (currentNavItem == "ToDos") {
+      return (<ListTodos todoList={todos} onDelete={deleteTodo} onUpdate={updateTodo}/>)
+    }else if (currentNavItem == "People") {
+      return (<div>People List here</div>)
+    }else{
+      return (<div>I do not understand the Current Nav menu item: {currentNavItem}</div>)
+    }
+  }
+  
+   const showDataLoading = () => {
     if (allData == true) {
       return(<Text variation="success">All data is loaded</Text>)
     }else{
@@ -189,25 +215,51 @@ function App() {
         <React.Fragment>
           <main>
             <Heading fontWeight={"bold"} level={1} >
-              {user?.signInDetails?.loginId}'s todos
+              <Flex direction="row" gap="5rem" padding="10x" >
+                
+                {user?.signInDetails?.loginId}'s todos
+                
+                <Button 
+                  onClick={signOut}
+                  size="large"
+                  variation="primary"
+                >
+                  Sign out
+                </Button>
+
+                <Badge size="large" variation={subConnectVariation} >
+                  {subConnectMsg}
+                </Badge>
+              </Flex>
             </Heading>
             
+            <Divider size="large" orientation="horizontal" padding="1rem" color="black"/>
+
+            <Grid
+              gap={tokens.space.small}
+              rowGap={tokens.space.small}
+              templateColumns="1fr 4fr"
+              templateRows="4fr 1fr"
+              paddingBottom="1rem"
+            >
+              <Card columnStart="1" >
+                {navigationMenu()}
+              </Card>
+              <Card columnStart="2" >
+                {mainContent()}
+              </Card>
+              <Card columnStart="1" columnEnd="-1">
+                {showDataLoading() }
+              </Card>
+            </Grid>
+
             <Flex direction="row" wrap="nowrap" gap="1rem" backgroundColor='green.20' padding='10px'>
               <button onClick={() => {setCreateOpen(true)}}>Create Todo</button>
-
-              <Badge size="large" variation={subConnectVariation}>
-                {subConnectMsg}
-              </Badge>
             </Flex>
 
             {newTodo()}
 
-            <ListTodos todoList={todos} onDelete={deleteTodo} onUpdate={updateTodo}/>
-
-            {showDataLoading() }
-
-            <button onClick={signOut}>Sign out</button>
-
+            
           </main>
         <div>
           {showAlerts()}
