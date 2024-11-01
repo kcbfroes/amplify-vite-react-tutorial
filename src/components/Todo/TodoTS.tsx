@@ -12,6 +12,9 @@ const TodoTS: React.FC<TodoProps> = ({ todo, handleOnClose}) => {
             setContent(todo.content);
             const done = todo.isDone ? true : false
             setIsDone(done);
+        }else{
+            setContent('')
+            setIsDone(false)
         }
     }, [todo]);
 

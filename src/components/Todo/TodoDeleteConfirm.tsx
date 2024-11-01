@@ -4,7 +4,7 @@ import { TodoDeleteConfirmProps } from '../Interfaces';
 export default function TodoDeleteConfirm(props: TodoDeleteConfirmProps) {
 
     const handleConfirm = () => {
-        props.deleteTodo("" + props.todo?.id)
+        props.deleteTodo(props.todo)
         props.close(true)        
     }
     const handleCancel = () => {

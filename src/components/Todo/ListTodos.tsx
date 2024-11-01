@@ -26,8 +26,8 @@ export default function ListTodos ( props: ListTodosProps ) {
     //All other
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
-    const [todo, setTodo] = useState<TodoType>()
-    const [modalOpen, setModelOpen] = useState(false)
+    const [todo, setTodo] = useState<TodoType>()        //useState<TodoType>() makes "todo" a type: TodoType | underfined
+    const [modalOpen, setModalOpen] = useState(false)
 
     //------------------------------ Create ------------------------------
     const newTodo = () => {
@@ -43,18 +43,18 @@ export default function ListTodos ( props: ListTodosProps ) {
     }
     const createTodo = (aTodo: Partial<TodoType>, cancelled:boolean) => {
         if ( !cancelled ) {
+            const todoKey: string = '' + aTodo.content
             props.client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
-                .then((result: any) => handleTodoResult(result, "Create a ToDo", aTodo))
-                .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Create a ToDo", aTodo));
+                .then((result: any) => handleTodoResult(result, "Create a ToDo", todoKey))
+                .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Create a ToDo", todoKey));
             }
             setCreateOpen(false);
     }
   
     //------------------------------ Edit/Update ------------------------------
-    const updateTodo = (todo: TodoType) => {
-        props.client.models.Todo.update(todo)
-            .then((result: any) => handleTodoResult(result, "Update a ToDo", todo))
-            .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todo));
+    const editTodo = (todo: TodoType) => {
+        setTodo(todo)
+        setEditOpen(true)
     }
     const editTodoClose = (changedTodo:Partial<TodoType>, cancelled: boolean) => {
         setEditOpen(false)
@@ -62,6 +62,23 @@ export default function ListTodos ( props: ListTodosProps ) {
             const mergedTodo: TodoType = Object.assign({}, todo, changedTodo)
             updateTodo(mergedTodo)            
         }
+    }
+    const ShowEditPopup = () => {
+        if (editOpen == true) {
+            return (
+                <Modal isOpen={editOpen}>
+                    <TodoTS todo={todo} handleOnClose={editTodoClose} />
+                </Modal>
+            )
+        }else{
+            return (<></>)
+        }
+    }
+    const updateTodo = (todo: TodoType) => {
+        const todoKey: string = todo.content
+        props.client.models.Todo.update(todo)
+            .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
+            .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));
     }
     const toggleDone = (todo: Schema["Todo"]["type"]) => {
         if (todo.isDone) {
@@ -73,16 +90,18 @@ export default function ListTodos ( props: ListTodosProps ) {
     }
   
     //------------------------------ Delete ------------------------------
-    const confirmDelete = (deleteId: string) => {
-        const theTodo = findTodoById(deleteId) 
-        setTodo(theTodo)
-        setModelOpen(true)
+    const confirmDelete = (todo: TodoType) => {
+        setTodo(todo)
+        setModalOpen(true)
     }
     const closeDeleteConfirm = () => {
-        setModelOpen(false)
+        setModalOpen(false)
     }
     const showDeleteConfirm = () => {
-        if (modalOpen) {
+        //Note the "&& todo" in the if() statement. If you don't do this, you get an error on
+        //  "todo={todo}" in <TodoDeleteConfirm todo={todo}.../>. 
+        //Gahead, try it: take && todo out of the if()
+        if (modalOpen && todo) {
             return (
                 <Modal isOpen={modalOpen}>
                     <TodoDeleteConfirm todo={todo} close={closeDeleteConfirm} deleteTodo={deleteTodo}/>
@@ -92,90 +111,45 @@ export default function ListTodos ( props: ListTodosProps ) {
             return <></>
         }
     }
-    const deleteTodo = (id: string) => {
-        props.client.models.Todo.delete({ id })
-            .then((result: any) => handleTodoDeleteResult(result, id))
-            .catch((error: GraphQLFormattedError[]) => handleTodoDeleteError(error, id));
+    const deleteTodo = (deleteTodo: TodoType) => {
+        const todoKey: string = deleteTodo.content
+        props.client.models.Todo.delete( {id:deleteTodo.id} )
+            .then((result: any) => handleTodoResult(result, "Delete", todoKey))
+            .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Delete", todoKey))
     }  
   
     //------------------------------ Handle Todo Actions ------------------------------
-    const handleTodoResult = (result: any, header: string, todo: Partial<TodoType> ) => {
-        setAlertMsg('')
+    const handleTodoResult = (result: any, header: string, todoKey: string ) => {
         if (result.errors) {
-            handleTodoError(result.errors, header, todo)
+            handleTodoError(result.errors, header, todoKey)
         }else{
+            setAlertVisible(true)
             setAlertHeading(header)
             setAlertVariation("success")
-            setAlertVisible(true)
-            setAlertMsg("'" + todo.content + "' was successful")
+            setAlertMsg("'" + todoKey + "' was successful")
         }
     }
-    const handleTodoError = (errors: Array<GraphQLFormattedError>, header: string, todo: Partial<TodoType>) => {    
+    const handleTodoError = (errors: Array<GraphQLFormattedError>, header: string, todoKey: string) => {    
       var allErrors: string = ''
+      for (const err of errors) {
+        allErrors += "'" + todoKey + "' -->" + err.message
+      }
+      setAlertVisible(true)
       setAlertHeading(header + " Unexpeceted Error")
-      for (const err of errors) {
-        allErrors += "'" + todo.content + "' -->" + err.message
-      }
-      setAlertMsg(allErrors)
       setAlertVariation("error")
-      setAlertVisible(true)
-    }
-    
-    const handleTodoDeleteResult = (result: any, todo_id: string ) => {
-      setAlertMsg('')
-      var theTodo: string = ''
-      var todo = findTodoById(todo_id);
-      if (todo) {
-        theTodo = todo.content
-      }else{
-        theTodo = "{ID '" + todo_id + "' was not found}"
-      }
-  
-      if (result.errors) {
-        handleTodoDeleteError(result.errors, theTodo)
-      }else{
-        setAlertHeading("Delete Todo")
-        setAlertVariation("success")
-        setAlertVisible(true)
-        setAlertMsg("'" + theTodo + "' was successful")
-      }
-    }
-    const handleTodoDeleteError = (errors: Array<GraphQLFormattedError>, theTodo: string ) => {
-      var allErrors: string = ""
-      setAlertHeading("Unexpeceted Error trying to delete Todo: '" + theTodo + "'")
-      for (const err of errors) {
-        allErrors += err.message
-      }
       setAlertMsg(allErrors)
-      setAlertVariation("error")
-      setAlertVisible(true)
-    }
-
-    const editTodo = (todo: TodoType) => {
-        setEditOpen(true)
-        setTodo(todo)
-    } 
-    const ShowEditPopup = () => {
-        if (editOpen == true) {
-            return (
-                <div>
-                    <TodoTS todo={todo} handleOnClose={editTodoClose} />
-                </div>
-            )
-        }else{
-            return (<></>)
-        }
     }
 
     const showAlerts = () => {
-      if (alertMsg.length > 0) {
+      if (alertVisible) {
         return(
           <Alert 
+            hidden={false}
             variation={alertVariation} 
             isDismissible={true} 
             hasIcon={true} 
             heading={alertHeading}
-            onDismiss={() => setAlertVisible(false)}
+            onDismiss={() => {setAlertVisible(false); setAlertMsg('');}}
           >
             {alertMsg}
           </Alert>
@@ -184,8 +158,6 @@ export default function ListTodos ( props: ListTodosProps ) {
         return(<></>)
       }    
     }
-  
-    const findTodoById = (id: string) => { return props.todoList.find(todo => todo.id == id) }
     
     return (
         <div>
@@ -211,7 +183,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                         <TableRow key={todo.id}>
                             <TableCell>{todo.content}</TableCell>
                             <TableCell onClick={() => toggleDone(todo)}>{todo.isDone ? "Yes" : "No"}</TableCell>
-                            <TableCell onClick={() => confirmDelete(todo.id)} >Delete</TableCell>
+                            <TableCell onClick={() => confirmDelete(todo)} >Delete</TableCell>
                             <TableCell onClick={() => editTodo(todo)}>Edit</TableCell>
                             <TableCell>{todo.id}</TableCell>
                         </TableRow>

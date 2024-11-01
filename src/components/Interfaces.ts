@@ -14,9 +14,9 @@ export interface TodoProps {
 }
 
 export interface TodoDeleteConfirmProps {
-    todo?: TodoType
+    todo: TodoType
     close: (value: boolean) => void
-    deleteTodo: (value: string) => void
+    deleteTodo: (todo: TodoType) => void
 }
 
 export interface ListTodosProps {
