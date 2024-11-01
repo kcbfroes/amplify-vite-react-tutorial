@@ -47,7 +47,7 @@ export default function PersonList ( props: PersonListProps ) {
     const createPerson = (aPerson: Partial<PersonType>, cancelled:boolean) => {
         if ( !cancelled ) {
             const key: string = '' + aPerson.name
-            props.client.models.Person.create({ content: "" + aPerson.name })
+            props.client.models.Person.create({ name: "" + aPerson.name })
                 .then((result: any) => handleResult(result, "Create a Person", key))
                 .catch((error: GraphQLFormattedError[]) => handleError(error, "Create a Person", key));
             }
