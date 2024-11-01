@@ -8,14 +8,23 @@ import { TodoType, PersonType } from "./components/Interfaces";
 import { CONNECTION_STATE_CHANGE, ConnectionState } from 'aws-amplify/data';
 import { Hub } from 'aws-amplify/utils';
 import NavMenu from "./components/Main/NavMenu";
+import PersonList from "./components/Person/PersonList";
 
 const client = generateClient<Schema>();
 
 function App() {
   
-  const [todos, setTodos] = useState<Array<TodoType>>([]);
-  const [currentNavItem, setCurrentNavItem] = useState('ToDos')
+  const [todos, setTodos] = useState<Array<TodoType>>([])
+  const [isTodoSynced, setIsTodoSynced] = useState(false)
+
+  const [people, setPeople] = useState<Array<PersonType>>([])
+  const [isPeopleSynced, setIsPeopleSynced] = useState(false)
+
   const [allData, setAllData] = useState(false)
+
+  //Navigation
+  const [currentNavItem, setCurrentNavItem] = useState('ToDos')
+
   //Subscription Status
   const [subConnectVariation, setSubConnectVariation] = useState<AlertVariations>("info")
   const [subConnectMsg, setsubConnectMsg] = useState<ConnectionState>()
@@ -29,14 +38,25 @@ function App() {
       When the sync process is complete, a snapshot will be emitted with
       all the records in the local store and an isSynced = true.
     */
-    const sub =client.models.Todo.observeQuery().subscribe({
+    const todoSubscription =client.models.Todo.observeQuery().subscribe({
       next: ({ items, isSynced }) => {
           setTodos([...items])
-          setAllData(isSynced)
+          setIsTodoSynced(isSynced)
       },
     });
-    return () => sub.unsubscribe();
-  }, []);
+
+    const personSubscription = client.models.Person.observeQuery().subscribe({
+      next: ({ items, isSynced }) => {
+          setPeople([...items]);
+          setIsPeopleSynced(isSynced);
+      },
+    });
+
+    return () => {
+      todoSubscription.unsubscribe();
+      personSubscription.unsubscribe();
+    };
+  }, [isTodoSynced, isPeopleSynced]);
 
   //------------------------------ Monitor Subscription Connection Status ------------------------------
   Hub.listen('api', (data: any) => {
@@ -70,7 +90,7 @@ function App() {
     if (currentNavItem == "ToDos") {
       return (<ListTodos todoList={todos} client={client}/>)
     }else if (currentNavItem == "People") {
-      return (<div>People List here</div>)
+      return (<PersonList personList={people} client={client}/>)
     }else{
       return (<div>I do not understand the Current Nav menu item: {currentNavItem}</div>)
     }

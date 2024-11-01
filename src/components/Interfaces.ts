@@ -22,14 +22,22 @@ export interface TodoDeleteConfirmProps {
 export interface ListTodosProps {
     todoList: Array<TodoType>
     client: any
-    //onDelete: (todoID: string) => void
-    //onUpdate: (todo: TodoType) => void
 }
 
 export interface PersonListProps {
     personList: Array<PersonType>
-    onDelete: (PersonID: string) => void
-    onUpdate: (person: PersonType) => void
+    client: any
+}
+
+export interface PersonProps {
+    person?: PersonType
+    handleOnClose: (value: Partial<PersonType>, cancel:boolean) => void
+}
+
+export interface PersonDeleteConfirmProps {
+    person: PersonType
+    close: (value: boolean) => void
+    deletePerson: (person: PersonType) => void
 }
 
 export interface ModalProps {
