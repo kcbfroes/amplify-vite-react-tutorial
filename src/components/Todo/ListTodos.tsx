@@ -13,6 +13,7 @@ import {
 import TodoTS from "./TodoTS";
 import { useState } from "react";
 import Modal from "../Modal";
+import TodoDeleteConfirm from "./TodoDeleteConfirm";
   
 export default function ListTodos ( props: ListTodosProps ) {
 
@@ -26,15 +27,16 @@ export default function ListTodos ( props: ListTodosProps ) {
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const [todo, setTodo] = useState<TodoType>()
+    const [modalOpen, setModelOpen] = useState(false)
 
     //------------------------------ Create ------------------------------
     const newTodo = () => {
         if (createOpen) {
-        return (
-            <Modal isOpen={createOpen}>
-                <TodoTS handleOnClose={createTodo} />
-            </Modal>
-        )
+            return (
+                <Modal isOpen={createOpen}>
+                    <TodoTS handleOnClose={createTodo} />
+                </Modal>
+            )
         }else{
             return(<></>);
         }
@@ -71,6 +73,25 @@ export default function ListTodos ( props: ListTodosProps ) {
     }
   
     //------------------------------ Delete ------------------------------
+    const confirmDelete = (deleteId: string) => {
+        const theTodo = findTodoById(deleteId) 
+        setTodo(theTodo)
+        setModelOpen(true)
+    }
+    const closeDeleteConfirm = () => {
+        setModelOpen(false)
+    }
+    const showDeleteConfirm = () => {
+        if (modalOpen) {
+            return (
+                <Modal isOpen={modalOpen}>
+                    <TodoDeleteConfirm todo={todo} close={closeDeleteConfirm} deleteTodo={deleteTodo}/>
+                </Modal>
+            )
+        }else{
+            return <></>
+        }
+    }
     const deleteTodo = (id: string) => {
         props.client.models.Todo.delete({ id })
             .then((result: any) => handleTodoDeleteResult(result, id))
@@ -190,7 +211,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                         <TableRow key={todo.id}>
                             <TableCell>{todo.content}</TableCell>
                             <TableCell onClick={() => toggleDone(todo)}>{todo.isDone ? "Yes" : "No"}</TableCell>
-                            <TableCell onClick={() => deleteTodo(todo.id)} >Delete</TableCell>
+                            <TableCell onClick={() => confirmDelete(todo.id)} >Delete</TableCell>
                             <TableCell onClick={() => editTodo(todo)}>Edit</TableCell>
                             <TableCell>{todo.id}</TableCell>
                         </TableRow>
@@ -199,6 +220,7 @@ export default function ListTodos ( props: ListTodosProps ) {
             </Table>
 
             {ShowEditPopup()}
+            {showDeleteConfirm()}
             
             <div>
                 {showAlerts()}

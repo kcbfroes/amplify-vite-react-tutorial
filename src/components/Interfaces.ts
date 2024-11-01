@@ -13,6 +13,12 @@ export interface TodoProps {
     handleOnClose: (value: Partial<TodoType>, cancel:boolean) => void
 }
 
+export interface TodoDeleteConfirmProps {
+    todo?: TodoType
+    close: (value: boolean) => void
+    deleteTodo: (value: string) => void
+}
+
 export interface ListTodosProps {
     todoList: Array<TodoType>
     client: any
