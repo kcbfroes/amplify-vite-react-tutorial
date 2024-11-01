@@ -9,6 +9,8 @@ import {
     Flex,
     AlertVariations,
     Alert,
+    Button,
+    useTheme,
   } from '@aws-amplify/ui-react';
 import TodoTS from "./TodoTS";
 import { useState } from "react";
@@ -16,6 +18,7 @@ import Modal from "../Modal";
 import TodoDeleteConfirm from "./TodoDeleteConfirm";
   
 export default function ListTodos ( props: ListTodosProps ) {
+    const { tokens } = useTheme();
 
     //Alerts
     const [alertHeading, setAlertHeading] = useState('')
@@ -161,42 +164,56 @@ export default function ListTodos ( props: ListTodosProps ) {
     
     return (
         <div>
-            <Flex>
-                <Flex direction="row" wrap="nowrap" gap="1rem" backgroundColor='green.20' padding='10px'>
-                <button onClick={() => {setCreateOpen(true)}}>Create Todo</button>
+            <Flex direction="column"  backgroundColor={tokens.colors.green[10]}>
+                <Flex direction="row">
+                    <Button 
+                        onClick={() => {setCreateOpen(true)}}
+                        variation="link"
+                    >
+                        Create Todo
+                    </Button>
                 </Flex>
 
-                {newTodo()}
-            </Flex>
+                    {newTodo()}
+                
 
-            <Table variation="bordered">
-                <TableHead>
-                    <TableRow>
-                        <TableCell as="th">Description</TableCell>
-                        <TableCell as="th">Is Done? (click me)</TableCell>
-                        <TableCell colSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle'}} as="th">Action</TableCell>
-                        <TableCell as="th">ID</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {props.todoList.map((todo: TodoType) => (
-                        <TableRow key={todo.id}>
-                            <TableCell>{todo.content}</TableCell>
-                            <TableCell onClick={() => toggleDone(todo)}>{todo.isDone ? "Yes" : "No"}</TableCell>
-                            <TableCell onClick={() => confirmDelete(todo)} >Delete</TableCell>
-                            <TableCell onClick={() => editTodo(todo)}>Edit</TableCell>
-                            <TableCell>{todo.id}</TableCell>
+                <Table variation="bordered">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell as="th">Description</TableCell>
+                            <TableCell as="th" textAlign="center">Is Done?</TableCell>
+                            <TableCell colSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle'}} as="th">Action</TableCell>
+                            <TableCell as="th">ID</TableCell>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                    </TableHead>
+                    <TableBody>
+                        {props.todoList.map((todo: TodoType) => (
+                            <TableRow key={todo.id}>
+                                <TableCell>{todo.content}</TableCell>
+                                <TableCell onClick={() => toggleDone(todo)} textAlign="center" title="click to change">
+                                    {todo.isDone ? "Yes" : "No"}
+                                </TableCell>
+                                <TableCell>
+                                    <Button onClick={() => confirmDelete(todo)} variation="link">
+                                        Delete
+                                    </Button></TableCell>
+                                <TableCell>
+                                    <Button onClick={() => editTodo(todo)} variation="link">
+                                        Edit
+                                    </Button></TableCell>
+                                <TableCell>{todo.id}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
 
-            {ShowEditPopup()}
-            {showDeleteConfirm()}
-            
-            <div>
-                {showAlerts()}
-            </div>
+                {ShowEditPopup()}
+                {showDeleteConfirm()}
+                
+                <div>
+                    {showAlerts()}
+                </div>
+            </Flex>
         </div>
     );
 }

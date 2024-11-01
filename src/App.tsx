@@ -98,7 +98,8 @@ function App() {
                 <Button 
                   onClick={signOut}
                   size="large"
-                  variation="primary"
+                  variation="link"
+                  color={tokens.colors.black}
                 >
                   Sign out
                 </Button>
