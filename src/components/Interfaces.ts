@@ -15,8 +15,9 @@ export interface TodoProps {
 
 export interface ListTodosProps {
     todoList: Array<TodoType>
-    onDelete: (todoID: string) => void
-    onUpdate: (todo: TodoType) => void
+    client: any
+    //onDelete: (todoID: string) => void
+    //onUpdate: (todo: TodoType) => void
 }
 
 export interface PersonListProps {
