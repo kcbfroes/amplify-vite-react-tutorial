@@ -20,7 +20,7 @@ function App() {
   const [people, setPeople] = useState<Array<PersonType>>([])
   const [isPeopleSynced, setIsPeopleSynced] = useState(false)
 
-  const [allData, setAllData] = useState(false)
+  const [allData, setAllDataSynced] = useState(false)
 
   //Navigation
   const [currentNavItem, setCurrentNavItem] = useState('ToDos')
@@ -51,6 +51,10 @@ function App() {
           setIsPeopleSynced(isSynced);
       },
     });
+
+    if (isTodoSynced && isPeopleSynced) {
+      setAllDataSynced(true);
+  }
 
     return () => {
       todoSubscription.unsubscribe();
