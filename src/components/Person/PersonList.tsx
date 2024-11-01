@@ -153,7 +153,7 @@ export default function PersonList ( props: PersonListProps ) {
     
     return (
         <div>
-            <Flex direction="column"  backgroundColor={tokens.colors.green[10]}>
+            <Flex direction="column"  backgroundColor={tokens.colors.blue[20]}>
                 <Flex direction="row">
                     <Button 
                         onClick={() => {setCreateOpen(true)}}

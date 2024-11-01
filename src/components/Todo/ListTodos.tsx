@@ -164,7 +164,7 @@ export default function ListTodos ( props: ListTodosProps ) {
     
     return (
         <div>
-            <Flex direction="column"  backgroundColor={tokens.colors.green[10]}>
+            <Flex direction="column"  backgroundColor={tokens.colors.green[20]}>
                 <Flex direction="row">
                     <Button 
                         onClick={() => {setCreateOpen(true)}}
