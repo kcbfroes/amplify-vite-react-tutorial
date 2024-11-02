@@ -163,15 +163,13 @@ export default function PersonList ( props: PersonListProps ) {
                     </Button>
                 </Flex>
 
-                    {newPerson()}
-                
+                {newPerson()}
 
                 <Table variation="bordered">
                     <TableHead>
                         <TableRow>
                             <TableCell as="th">Name</TableCell>
                             <TableCell colSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle'}} as="th">Action</TableCell>
-                            <TableCell as="th">ID</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -186,7 +184,6 @@ export default function PersonList ( props: PersonListProps ) {
                                     <Button onClick={() => editPerson(person)} variation="link">
                                         Edit
                                     </Button></TableCell>
-                                <TableCell>{person.id}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

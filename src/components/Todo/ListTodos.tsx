@@ -16,6 +16,7 @@ import TodoTS from "./TodoTS";
 import { useState } from "react";
 import Modal from "../Modal";
 import TodoDeleteConfirm from "./TodoDeleteConfirm";
+import OwnerSelect from "./OwnerSelect";
   
 export default function ListTodos ( props: ListTodosProps ) {
     const { tokens } = useTheme();
@@ -90,6 +91,20 @@ export default function ListTodos ( props: ListTodosProps ) {
             todo.isDone = true
         }
         updateTodo(todo)
+    }
+    const onChangeOwner = () => {
+
+    }
+    const showOwnerSelect = () => {
+        if (selectOwner == true) {
+            return (
+                <Modal isOpen={editOpen}>
+                    <OwnerSelect todo={todo} people={} handleOnClose={editTodoClose} />
+                </Modal>
+            )
+        }else{
+            return (<></>)
+        }
     }
   
     //------------------------------ Delete ------------------------------
@@ -174,8 +189,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                     </Button>
                 </Flex>
 
-                    {newTodo()}
-                
+                {newTodo()}
 
                 <Table variation="bordered">
                     <TableHead>
@@ -183,7 +197,8 @@ export default function ListTodos ( props: ListTodosProps ) {
                             <TableCell as="th">Description</TableCell>
                             <TableCell as="th" textAlign="center">Is Done?</TableCell>
                             <TableCell colSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle'}} as="th">Action</TableCell>
-                            <TableCell as="th">ID</TableCell>
+                            <TableCell as="th">Owned By</TableCell>
+                            <TableCell as="th">Assigned To</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -201,7 +216,12 @@ export default function ListTodos ( props: ListTodosProps ) {
                                     <Button onClick={() => editTodo(todo)} variation="link">
                                         Edit
                                     </Button></TableCell>
-                                <TableCell>{todo.id}</TableCell>
+                                <TableCell onClick={() => onChangeOwner(todo)} textAlign="center" title="click to change">
+                                    {todo.owner.name}
+                                </TableCell>
+                                <TableCell textAlign="center" title="click to change">
+                                    {todo.assignedTo.name}
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
