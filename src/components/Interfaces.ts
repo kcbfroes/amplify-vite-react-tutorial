@@ -19,11 +19,6 @@ export interface TodoDeleteConfirmProps {
     deleteTodo: (todo: TodoType) => void
 }
 
-export interface ListTodosProps {
-    todoList: Array<TodoType>
-    client: any
-}
-
 export interface PersonListProps {
     personList: Array<PersonType>
     client: any
@@ -42,7 +37,6 @@ export interface PersonDeleteConfirmProps {
 
 export interface OwnerSelectProps {
     todo: TodoType
-    people: Array<PersonType>
     selectedPersonId: (personId: string) => void
     close: (value: boolean) => void
 }

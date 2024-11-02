@@ -1,5 +1,5 @@
 import { Schema } from "../../../amplify/data/resource";
-import { GraphQLFormattedError, ListTodosProps, TodoType } from "../Interfaces";
+import { GraphQLFormattedError, TodoType } from "../Interfaces";
 import {
     Table,
     TableCell,
@@ -13,12 +13,18 @@ import {
     useTheme,
   } from '@aws-amplify/ui-react';
 import TodoTS from "./TodoTS";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Modal from "../Modal";
 import TodoDeleteConfirm from "./TodoDeleteConfirm";
 import OwnerSelect from "./OwnerSelect";
+import { AppDataContext } from "../../context/AppDataContext";
   
-export default function ListTodos ( props: ListTodosProps ) {
+export default function ListTodos () {
+  
+    const context = useContext(AppDataContext)
+    if (!context) throw new Error("AppContext is not available")
+    const { client, todos } = context
+    
     const { tokens } = useTheme();
 
     //Alerts
@@ -32,6 +38,8 @@ export default function ListTodos ( props: ListTodosProps ) {
     const [editOpen, setEditOpen] = useState(false)
     const [todo, setTodo] = useState<TodoType>()        //useState<TodoType>() makes "todo" a type: TodoType | underfined
     const [modalOpen, setModalOpen] = useState(false)
+    const [selectOwner, setSelectOwner] = useState(false)
+    const [owner, setOwner] = useState('')
 
     //------------------------------ Create ------------------------------
     const newTodo = () => {
@@ -48,7 +56,7 @@ export default function ListTodos ( props: ListTodosProps ) {
     const createTodo = (aTodo: Partial<TodoType>, cancelled:boolean) => {
         if ( !cancelled ) {
             const todoKey: string = '' + aTodo.content
-            props.client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
+            client.models.Todo.create({ content: "" + aTodo.content, isDone: aTodo.isDone })
                 .then((result: any) => handleTodoResult(result, "Create a ToDo", todoKey))
                 .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Create a ToDo", todoKey));
             }
@@ -80,7 +88,7 @@ export default function ListTodos ( props: ListTodosProps ) {
     }
     const updateTodo = (todo: TodoType) => {
         const todoKey: string = todo.content
-        props.client.models.Todo.update(todo)
+        client.models.Todo.update(todo)
             .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
             .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));
     }
@@ -92,14 +100,15 @@ export default function ListTodos ( props: ListTodosProps ) {
         }
         updateTodo(todo)
     }
-    const onChangeOwner = () => {
-
+    const onChangeOwner = (todo: TodoType) => {
+        setSelectOwner(true)
+        setTodo(todo)
     }
     const showOwnerSelect = () => {
         if (selectOwner == true) {
             return (
                 <Modal isOpen={editOpen}>
-                    <OwnerSelect todo={todo} people={} handleOnClose={editTodoClose} />
+                    <OwnerSelect todo={todo} selectedPersonId={setOwner} handleOnClose={editTodoClose} />
                 </Modal>
             )
         }else{
@@ -131,7 +140,7 @@ export default function ListTodos ( props: ListTodosProps ) {
     }
     const deleteTodo = (deleteTodo: TodoType) => {
         const todoKey: string = deleteTodo.content
-        props.client.models.Todo.delete( {id:deleteTodo.id} )
+        client.models.Todo.delete( {id:deleteTodo.id} )
             .then((result: any) => handleTodoResult(result, "Delete", todoKey))
             .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Delete", todoKey))
     }  
@@ -202,7 +211,7 @@ export default function ListTodos ( props: ListTodosProps ) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {props.todoList.map((todo: TodoType) => (
+                        {todos.map((todo: TodoType) => (
                             <TableRow key={todo.id}>
                                 <TableCell>{todo.content}</TableCell>
                                 <TableCell onClick={() => toggleDone(todo)} textAlign="center" title="click to change">

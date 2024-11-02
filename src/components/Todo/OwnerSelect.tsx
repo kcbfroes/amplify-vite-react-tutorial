@@ -1,6 +1,11 @@
-import { Alert, Autocomplete, Button, Card, ComboBoxOption, Flex, Label } from '@aws-amplify/ui-react';
+import { Autocomplete, Button, ComboBoxOption, Flex } from '@aws-amplify/ui-react';
 import { OwnerSelectProps, PersonType } from '../Interfaces';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { AppDataContext } from '../../context/AppDataContext';
+
+const context = useContext(AppDataContext)
+if (!context) throw new Error("AppContext is not available")
+const { people } = context
 
 const peopleOptions = (people: Array<PersonType>): Array<ComboBoxOption> => {
     return people.map((person: PersonType) => ({
@@ -9,7 +14,7 @@ const peopleOptions = (people: Array<PersonType>): Array<ComboBoxOption> => {
     }));
 };
 
-export default function TodoDeleteConfirm(props: OwnerSelectProps) {
+const OwnerSelect: React.FC<OwnerSelectProps> = ({ todo, selectedPersonId, close}) => {
 
     const [value, setValue] = useState('');
     const [selectedId, setSelectedId] = useState('');
@@ -17,15 +22,15 @@ export default function TodoDeleteConfirm(props: OwnerSelectProps) {
 
     const handleSelect = () => {
         if (selectedId) {
-            props.selectedPersonId(selectedId)
-            props.close(true)
+            selectedPersonId(selectedId)
+            close(true)
         }
     }
     const handleCancel = () => {
-        props.close(true)
+        close(true)
     }
 
-    const options: Array<ComboBoxOption> = peopleOptions(props.people)
+    const options: Array<ComboBoxOption> = peopleOptions(people)
 
     const onChange = (event: any) => {
         setValue(event.target.value)
@@ -42,7 +47,7 @@ export default function TodoDeleteConfirm(props: OwnerSelectProps) {
     return (
         <div>
             <Autocomplete
-                label="Select Owner for "
+                label={"Select Owner for '" + todo.content + "'" }
                 options={options}
                 value={value}
                 onChange={onChange}
@@ -58,3 +63,5 @@ export default function TodoDeleteConfirm(props: OwnerSelectProps) {
         </div>
     );
 }
+
+export default OwnerSelect;
