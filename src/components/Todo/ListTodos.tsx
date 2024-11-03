@@ -34,18 +34,17 @@ export default function ListTodos () {
     const [alertVisible, setAlertVisible] = useState(false)
 
     //All other
+    const [todo, setTodo] = useState<TodoType>()        //useState<TodoType>() makes "todo" a type: TodoType | underfined
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
-    const [todo, setTodo] = useState<TodoType>()        //useState<TodoType>() makes "todo" a type: TodoType | underfined
-    const [modalOpen, setModalOpen] = useState(false)
-    const [selectOwner, setSelectOwner] = useState(false)
-    const [owner, setOwner] = useState('')
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+    const [selectOwnerOpen, setSelectOwnerOpen] = useState(false)
 
     //------------------------------ Create ------------------------------
     const newTodo = () => {
         if (createOpen) {
             return (
-                <Modal isOpen={createOpen}>
+                <Modal>
                     <TodoTS handleOnClose={createTodo} />
                 </Modal>
             )
@@ -70,20 +69,12 @@ export default function ListTodos () {
     }
     const editTodoClose = (changedTodo:Partial<TodoType>, cancelled: boolean) => {
         setEditOpen(false)
+        setSelectOwnerOpen(false)
         if (cancelled == false) {
             const mergedTodo: TodoType = Object.assign({}, todo, changedTodo)
-            updateTodo(mergedTodo)            
-        }
-    }
-    const ShowEditPopup = () => {
-        if (editOpen == true) {
-            return (
-                <Modal isOpen={editOpen}>
-                    <TodoTS todo={todo} handleOnClose={editTodoClose} />
-                </Modal>
-            )
-        }else{
-            return (<></>)
+            console.log("The Updated Todo: ", mergedTodo)
+            updateTodo(mergedTodo)
+            console.log("The Todo after call to 'updateTodo': ", mergedTodo)
         }
     }
     const updateTodo = (todo: TodoType) => {
@@ -92,7 +83,7 @@ export default function ListTodos () {
             .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
             .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));
     }
-    const toggleDone = (todo: Schema["Todo"]["type"]) => {
+    const toggleDone = (todo: TodoType) => {
         if (todo.isDone) {
             todo.isDone = false
         }else{
@@ -101,14 +92,26 @@ export default function ListTodos () {
         updateTodo(todo)
     }
     const onChangeOwner = (todo: TodoType) => {
-        setSelectOwner(true)
+        setSelectOwnerOpen(true)
         setTodo(todo)
     }
-    const showOwnerSelect = () => {
-        if (selectOwner == true) {
+    const ShowEditPopup = () => {
+        if (editOpen == true) {
             return (
-                <Modal isOpen={editOpen}>
-                    <OwnerSelect todo={todo} selectedPersonId={setOwner} handleOnClose={editTodoClose} />
+                <Modal>
+                    <TodoTS todo={todo} handleOnClose={editTodoClose} />
+                </Modal>
+            )
+        }else{
+            return (<></>)
+        }
+    }
+    const showOwnerSelect = () => {
+        //Oh man, this sucks.  You have to set isOpen to true and something else to show the select owner but then we use the editOpen shit when done
+        if (selectOwnerOpen == true) {
+            return (
+                <Modal>
+                    <OwnerSelect todo={todo} handleOnClose={editTodoClose} />
                 </Modal>
             )
         }else{
@@ -119,18 +122,18 @@ export default function ListTodos () {
     //------------------------------ Delete ------------------------------
     const confirmDelete = (todo: TodoType) => {
         setTodo(todo)
-        setModalOpen(true)
+        setDeleteConfirmOpen(true)
     }
     const closeDeleteConfirm = () => {
-        setModalOpen(false)
+        setDeleteConfirmOpen(false)
     }
     const showDeleteConfirm = () => {
         //Note the "&& todo" in the if() statement. If you don't do this, you get an error on
         //  "todo={todo}" in <TodoDeleteConfirm todo={todo}.../>. 
         //Gahead, try it: take && todo out of the if()
-        if (modalOpen && todo) {
+        if (deleteConfirmOpen && todo) {
             return (
-                <Modal isOpen={modalOpen}>
+                <Modal>
                     <TodoDeleteConfirm todo={todo} close={closeDeleteConfirm} deleteTodo={deleteTodo}/>
                 </Modal>
             )
@@ -150,6 +153,7 @@ export default function ListTodos () {
         if (result.errors) {
             handleTodoError(result.errors, header, todoKey)
         }else{
+            console.log("The Todo after being update: ", result)
             setAlertVisible(true)
             setAlertHeading(header)
             setAlertVariation("success")
@@ -238,6 +242,7 @@ export default function ListTodos () {
 
                 {ShowEditPopup()}
                 {showDeleteConfirm()}
+                {showOwnerSelect()}
                 
                 <div>
                     {showAlerts()}

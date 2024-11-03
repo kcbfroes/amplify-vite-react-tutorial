@@ -2,7 +2,6 @@ import { Flex, View } from '@aws-amplify/ui-react';
 import { ModalProps } from './Interfaces';
 
 const Modal = ( props: ModalProps ) => {
-  if (!props.isOpen) return null;
 
   return (
     <Flex alignContent='center' alignItems='center'>

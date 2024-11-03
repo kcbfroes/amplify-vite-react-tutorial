@@ -36,6 +36,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
             next: ({ items, isSynced }) => {
                 setTodos([...items])
                 setIsTodoSynced(isSynced)
+                console.log("Refreshed Todos: ", todos)
             },
         });
 

@@ -1,11 +1,7 @@
 import { Autocomplete, Button, ComboBoxOption, Flex } from '@aws-amplify/ui-react';
-import { OwnerSelectProps, PersonType } from '../Interfaces';
+import { PersonType, TodoProps } from '../Interfaces';
 import { useContext, useState } from 'react';
 import { AppDataContext } from '../../context/AppDataContext';
-
-const context = useContext(AppDataContext)
-if (!context) throw new Error("AppContext is not available")
-const { people } = context
 
 const peopleOptions = (people: Array<PersonType>): Array<ComboBoxOption> => {
     return people.map((person: PersonType) => ({
@@ -14,7 +10,10 @@ const peopleOptions = (people: Array<PersonType>): Array<ComboBoxOption> => {
     }));
 };
 
-const OwnerSelect: React.FC<OwnerSelectProps> = ({ todo, selectedPersonId, close}) => {
+const OwnerSelect: React.FC<TodoProps> = ({ todo, handleOnClose}) => {
+    const context = useContext(AppDataContext)
+    if (!context) throw new Error("AppContext is not available")
+    const { people } = context 
 
     const [value, setValue] = useState('');
     const [selectedId, setSelectedId] = useState('');
@@ -22,12 +21,16 @@ const OwnerSelect: React.FC<OwnerSelectProps> = ({ todo, selectedPersonId, close
 
     const handleSelect = () => {
         if (selectedId) {
-            selectedPersonId(selectedId)
-            close(true)
+            if (todo) {
+                todo.ownerId = selectedId
+                handleOnClose(todo, false)
+            }else{
+                handleCancel()
+            }
         }
     }
     const handleCancel = () => {
-        close(true)
+        handleOnClose({}, false)
     }
 
     const options: Array<ComboBoxOption> = peopleOptions(people)
@@ -42,12 +45,20 @@ const OwnerSelect: React.FC<OwnerSelectProps> = ({ todo, selectedPersonId, close
     const onSelect = (option: ComboBoxOption) => {
         setSelectedId(option.id)
         setSelectedName(option.label)
+        setValue(option.label)
+    }
+    const autoCompleteLabel = () => {
+        var label: string = ''
+        if (todo) {
+            "Select Owner for " +  todo.content + "'"
+        }
+        return label
     }
 
     return (
         <div>
             <Autocomplete
-                label={"Select Owner for '" + todo.content + "'" }
+                label={autoCompleteLabel()}
                 options={options}
                 value={value}
                 onChange={onChange}

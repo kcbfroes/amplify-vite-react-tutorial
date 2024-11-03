@@ -16,7 +16,7 @@ function App() {
   
   const context = useContext(AppDataContext)
   if (!context) throw new Error("AppContext is not available")
-  const { todos, people, allDataSynced } = context
+  const { people, allDataSynced } = context
 
   //Navigation
   const [currentNavItem, setCurrentNavItem] = useState('ToDos')

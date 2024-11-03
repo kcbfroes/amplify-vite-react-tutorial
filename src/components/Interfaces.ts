@@ -35,14 +35,7 @@ export interface PersonDeleteConfirmProps {
     deletePerson: (person: PersonType) => void
 }
 
-export interface OwnerSelectProps {
-    todo: TodoType
-    selectedPersonId: (personId: string) => void
-    close: (value: boolean) => void
-}
-
 export interface ModalProps {
-    isOpen: boolean
     children: any
 }
 
