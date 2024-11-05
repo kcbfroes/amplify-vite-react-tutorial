@@ -9,8 +9,21 @@ specifies that any user authenticated via an API key can "create", "read",
 const schema = a.schema({
   Todo: a
     .model({
-      content: a.string(),
+      content: a.string().required(),
       isDone: a.boolean(),
+
+      ownerId: a.id(),
+      owner: a.belongsTo('Person', 'ownerId'),
+      
+      assignedToId: a.id(),
+      assignedTo: a.belongsTo('Person', 'assignedToId'),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
+  Person: a
+    .model({
+      name: a.string().required(),
+      ownedTodos: a.hasMany('Todo', 'ownerId'),
+      assignedTodos: a.hasMany('Todo', 'assignedToId'),
     })
     .authorization((allow) => [allow.publicApiKey()]),
 });
@@ -20,6 +33,7 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
+    //this should maybe be:     defaultAuthorizationMode: 'userPool',
     defaultAuthorizationMode: "apiKey",
     // API Key is used for a.allow.public() rules
     apiKeyAuthorizationMode: {
