@@ -104,8 +104,8 @@ function App() {
             <Grid
               gap={tokens.space.small}
               rowGap={tokens.space.small}
-              templateColumns="1fr 4fr"
-              templateRows="4fr 1fr"
+              templateColumns="1fr 6fr"
+              templateRows="6fr .5fr"
               paddingBottom="1rem"
             >
               <Card columnStart="1" >

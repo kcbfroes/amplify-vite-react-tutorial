@@ -31,12 +31,14 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         the items synced so far and an isSynced = false. 
         When the sync process is complete, a snapshot will be emitted with
         all the records in the local store and an isSynced = true.
-        */
+        
+       ---> observeQuery() DOES NOT support nested data!
+
+       */
         const todoSubscription =client.models.Todo.observeQuery().subscribe({
             next: ({ items, isSynced }) => {
                 setTodos([...items])
                 setIsTodoSynced(isSynced)
-                console.log("Refreshed Todos: ", todos)
             },
         });
 

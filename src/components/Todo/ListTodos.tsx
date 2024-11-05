@@ -1,4 +1,3 @@
-import { Schema } from "../../../amplify/data/resource";
 import { GraphQLFormattedError, TodoType } from "../Interfaces";
 import {
     Table,
@@ -72,16 +71,55 @@ export default function ListTodos () {
         setSelectOwnerOpen(false)
         if (cancelled == false) {
             const mergedTodo: TodoType = Object.assign({}, todo, changedTodo)
-            console.log("The Updated Todo: ", mergedTodo)
+            console.log("You changed the Todo. I'm about to call 'updateTodo' with: ", mergedTodo)
             updateTodo(mergedTodo)
-            console.log("The Todo after call to 'updateTodo': ", mergedTodo)
         }
     }
-    const updateTodo = (todo: TodoType) => {
+    const updateTodo = async (todo: TodoType) => {
         const todoKey: string = todo.content
+
+        //Version 4: this does not work
+        /*
+        try {
+            const result = await client.models.Todo.update({ ...todo });
+            handleTodoResult(result, "Update a ToDo", todoKey);
+            console.log("'client.models.Todo.update' was successful. It returned this result: ", result)
+        } catch (error) {
+            handleTodoError(error as GraphQLFormattedError[], "Update a ToDo: ", todoKey);
+        }*/
+
+        //Version 3: this does not work
+        /*
+        const updatedTodo = await client.models.Todo.update({
+            ...todo,
+            id: todo.id,  // Ensure the correct item is targeted by its unique identifier.
+        }).catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));
+    
+        if (updatedTodo) {
+            console.log("'client.models.Todo.update' success! updatedTodo is: ", updatedTodo)
+            handleTodoResult(updatedTodo, "Update a ToDo", todoKey);
+        }*/        
+        
+        //Version 2: this works but you'll have to update this code whenever the schema changes.
+        //However, note that while ownerId is updated, ownerName
+        await client.models.Todo.update(
+            {
+            id: todo.id,
+            content: todo.content,
+            isDone: todo.isDone,
+            ownerId: todo.ownerId,
+            assignedToId: todo.assignedToId
+            }
+        )
+        .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
+        .catch((error: any) => handleTodoError(error, "Update a ToDo", todoKey));
+                
+        //Why won't this update ownerId? The todo passed in has ownerId valued, and this command runs successfully, but,
+        //the todo object it returns does NOT have a value for ownerId (see console.log in handleTodoResult below)
+        /* Version 1: this does not work.
         client.models.Todo.update(todo)
             .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
-            .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));
+            .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));*/
     }
     const toggleDone = (todo: TodoType) => {
         if (todo.isDone) {
@@ -107,7 +145,6 @@ export default function ListTodos () {
         }
     }
     const showOwnerSelect = () => {
-        //Oh man, this sucks.  You have to set isOpen to true and something else to show the select owner but then we use the editOpen shit when done
         if (selectOwnerOpen == true) {
             return (
                 <Modal>
@@ -153,7 +190,6 @@ export default function ListTodos () {
         if (result.errors) {
             handleTodoError(result.errors, header, todoKey)
         }else{
-            console.log("The Todo after being update: ", result)
             setAlertVisible(true)
             setAlertHeading(header)
             setAlertVariation("success")
@@ -230,7 +266,8 @@ export default function ListTodos () {
                                         Edit
                                     </Button></TableCell>
                                 <TableCell onClick={() => onChangeOwner(todo)} textAlign="center" title="click to change">
-                                    {todo.owner.name}
+                                    <p>ownerID: {todo.ownerId}</p>
+                                    <p>Owner Name: {todo.owner.name}</p>
                                 </TableCell>
                                 <TableCell textAlign="center" title="click to change">
                                     {todo.assignedTo.name}
