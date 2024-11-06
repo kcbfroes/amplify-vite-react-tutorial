@@ -69,21 +69,34 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 setIsPeopleSynced(isSynced);
             },
         });
+        function getOwnedTodos(personId: string) {
+            return (
+                todos.filter(todo => {
+                    todo.ownerId != personId
+                })
+            )
+        }
+        function getAssignedTodos(personId: string) {
+            return (
+                todos.filter(todo => {
+                    todo.assignedToId != personId
+                })
+            )
+        }
         function convertPeopleItems(person: Array<Schema["Person"]["type"]>): Array<PersonType> {
             return (
                 person.map((item) => (
                     {
                         id: item.id,
                         name: item.name,
-                        ownedTodos: [],
-                        assignedTodos: []
+                        ownedTodos: getOwnedTodos(item.id),
+                        assignedTodos: getAssignedTodos(item.id)
                     }
                 ))
             )
         }
 
         if (isTodoSynced && isPeopleSynced) {
-            getNestedData()
             setAllDataSynced(true);
         }
 
@@ -93,37 +106,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         };
 
     }, [isTodoSynced, isPeopleSynced]);
-
-    const getNestedData = async () => {
-        try {
-            /*
-            We define peopleMap as an object with string keys and values that are either string or undefined 
-            ({ [key: string]: string | undefined }), to account for cases where ownerId might not match any Person.id.
-
-            acc is typed as { [key: string]: string } because it’s initialized as an empty object
-            and accumulates Person.id to Person.name mappings.
-            */
-            const peopleMap: { [key: string]: string | undefined } = people.reduce((acc: { [key: string]: string }, person) => {
-                acc[person.id] = person.name;
-                return acc;
-            }, {});
-
-            /*
-            When we map over todos, we add the ownerName property to each item by looking it up in peopleMap.
-            If there’s no match in peopleMap, ownerName defaults to null.
-            */
-            const todosWithOwnerNames = todos.map((todo) => ({
-                ...todo,
-                owner: todo.ownerId ? peopleMap[todo.ownerId] : null
-            }));
-
-        console.log("AppDataContext, todos with owner: ", todosWithOwnerNames)
-
-        setTodos(todosWithOwnerNames);
-            } catch (error) {
-                console.error('Error filling in owner names:', error);
-            }
-    }
 
     return (
         <AppDataContext.Provider value={{ client, todos, people, setTodos, setPeople, allDataSynced }}>

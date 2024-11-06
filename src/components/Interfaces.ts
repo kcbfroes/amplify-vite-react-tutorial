@@ -54,6 +54,11 @@ export interface PersonDeleteConfirmProps {
     deletePerson: (person: PersonType) => void
 }
 
+export interface PersonSelectProps {
+    label: string
+    handleOnClose: (newPersonId: string) => void
+}
+
 export interface ModalProps {
     children: any
 }
