@@ -169,6 +169,8 @@ export default function PersonList ( props: PersonListProps ) {
                     <TableHead>
                         <TableRow>
                             <TableCell as="th">Name</TableCell>
+                            <TableCell as="th" style={{ textAlign: 'center'}}>Owned To Dos</TableCell>
+                            <TableCell as="th" style={{ textAlign: 'center'}}>Assigned To Dos</TableCell>
                             <TableCell colSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle'}} as="th">Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -176,6 +178,8 @@ export default function PersonList ( props: PersonListProps ) {
                         {props.personList.map((person: PersonType) => (
                             <TableRow key={person.id}>
                                 <TableCell>{person.name}</TableCell>
+                                <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
+                                <TableCell style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
                                 <TableCell>
                                     <Button onClick={() => confirmDelete(person)} variation="link">
                                         Delete

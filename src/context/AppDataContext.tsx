@@ -43,7 +43,8 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
        */
         const todoSubscription =client.models.Todo.observeQuery().subscribe({
             next: ({ items, isSynced }) => {
-                setTodos(convertTodoItems(items))
+                const newTodos = convertTodoItems(items)
+                setTodos(...[newTodos])
                 setIsTodoSynced(isSynced)
             },
         });
@@ -65,23 +66,26 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         const personSubscription = client.models.Person.observeQuery().subscribe({
             next: ({ items, isSynced }) => {
-                setPeople(convertPeopleItems(items));
+                const newPeopleList = convertPeopleItems(items)
+                console.log("new People: ", newPeopleList)
+                setPeople(...[newPeopleList]);
                 setIsPeopleSynced(isSynced);
             },
         });
         function getOwnedTodos(personId: string) {
+            //This is not working!
             return (
                 todos.filter(todo => {
-                    todo.ownerId != personId
+                    todo.ownerId === personId
                 })
             )
         }
         function getAssignedTodos(personId: string) {
-            return (
-                todos.filter(todo => {
-                    todo.assignedToId != personId
-                })
-            )
+            console.log("Todos: ", todos)
+            //This is not working!
+            const assignedTodos = todos.filter(todo => {todo.assignedToId === personId})
+            //console.log("Assigned Todos for '" + personId + "'", assignedTodos)
+            return (assignedTodos)
         }
         function convertPeopleItems(person: Array<Schema["Person"]["type"]>): Array<PersonType> {
             return (
