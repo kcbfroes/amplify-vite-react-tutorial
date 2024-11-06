@@ -1,4 +1,3 @@
-import { Schema } from "../../../amplify/data/resource";
 import PersonTS from "./PersonTS"
 import { GraphQLFormattedError, PersonListProps, PersonType } from "../Interfaces";
 import {
@@ -13,7 +12,7 @@ import {
     Button,
     useTheme,
   } from '@aws-amplify/ui-react';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "../Modal";
 import PersonDeleteConfirm from "./PersonDeleteConfirm";
 
@@ -27,10 +26,16 @@ export default function PersonList ( props: PersonListProps ) {
     const [alertVisible, setAlertVisible] = useState(false)
 
     //All other
+    const [personList, setPersonList] = useState<Array<PersonType>>([])
     const [person, setPerson] = useState<PersonType>()        //useState<PersonType>() makes "person" a type: PersonType | underfined
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const [modalOpen, setModalOpen] = useState(false)
+
+    useEffect(() => {
+        setPersonList(...[props.personList])
+        console.log("PersonList, refreshing")
+    }, [props.personList]);
 
     //------------------------------ Create ------------------------------
     const newPerson = () => {
@@ -175,21 +180,21 @@ export default function PersonList ( props: PersonListProps ) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {props.personList.map((person: PersonType) => (
-                            <TableRow key={person.id}>
-                                <TableCell>{person.name}</TableCell>
-                                <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
-                                <TableCell style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
-                                <TableCell>
-                                    <Button onClick={() => confirmDelete(person)} variation="link">
-                                        Delete
-                                    </Button></TableCell>
-                                <TableCell>
-                                    <Button onClick={() => editPerson(person)} variation="link">
-                                        Edit
-                                    </Button></TableCell>
-                            </TableRow>
-                        ))}
+                        {personList.map((person: PersonType) => (
+                                <TableRow key={person.id}>
+                                    <TableCell>{person.name}</TableCell>
+                                    <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
+                                    <TableCell style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
+                                    <TableCell>
+                                        <Button onClick={() => confirmDelete(person)} variation="link">
+                                            Delete
+                                        </Button></TableCell>
+                                    <TableCell>
+                                        <Button onClick={() => editPerson(person)} variation="link">
+                                            Edit
+                                        </Button></TableCell>
+                                </TableRow>
+                            ))}
                     </TableBody>
                 </Table>
 
