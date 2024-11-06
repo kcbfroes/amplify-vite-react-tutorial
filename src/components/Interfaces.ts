@@ -1,7 +1,26 @@
 import { Schema } from "../../amplify/data/resource";
 
-export type TodoType = Schema["Todo"]["type"]
-export type PersonType = Schema["Person"]["type"]
+//this simply will NOT do. The Schema is too complicate to repeat.
+//Instead, we should just define what our Todo and Person looks like.
+//I'm hoping we can the use the basic types to update the DB.
+export type oldTodoType = Schema["Todo"]["type"]
+export type oldPersonType = Schema["Person"]["type"]
+//New Types:
+export type TodoType = {
+    id: string
+    content?: string
+    isDone?: boolean | null
+    ownerId?: string
+    ownerName?: string
+    assignedToId?: string
+    assignedToName?: string
+}
+export type PersonType = {
+    id: string
+    name: string
+    ownedTodos: Array<TodoType>
+    assignedTodos: Array<TodoType>
+}
 
 export interface NavigationProps {
     currentItem: string

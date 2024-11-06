@@ -36,7 +36,7 @@ export default function PersonList ( props: PersonListProps ) {
     const newPerson = () => {
         if (createOpen) {
             return (
-                <Modal isOpen={createOpen}>
+                <Modal>
                     <PersonTS handleOnClose={createPerson} />
                 </Modal>
             )
@@ -69,7 +69,7 @@ export default function PersonList ( props: PersonListProps ) {
     const ShowEditPopup = () => {
         if (editOpen == true) {
             return (
-                <Modal isOpen={editOpen}>
+                <Modal>
                     <PersonTS person={person} handleOnClose={editPersonClose} />
                 </Modal>
             )
@@ -95,7 +95,7 @@ export default function PersonList ( props: PersonListProps ) {
     const showDeleteConfirm = () => {
         if (modalOpen && person) {
             return (
-                <Modal isOpen={modalOpen}>
+                <Modal>
                     <PersonDeleteConfirm person={person} close={closeDeleteConfirm} deletePerson={deletePerson}/>
                 </Modal>
             )

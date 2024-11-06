@@ -76,7 +76,7 @@ export default function ListTodos () {
         }
     }
     const updateTodo = async (todo: TodoType) => {
-        const todoKey: string = todo.content
+        const todoKey: string = '' + todo.content
 
         //Version 4: this does not work
         /*
@@ -179,7 +179,7 @@ export default function ListTodos () {
         }
     }
     const deleteTodo = (deleteTodo: TodoType) => {
-        const todoKey: string = deleteTodo.content
+        const todoKey: string = '' + deleteTodo.content
         client.models.Todo.delete( {id:deleteTodo.id} )
             .then((result: any) => handleTodoResult(result, "Delete", todoKey))
             .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Delete", todoKey))
@@ -266,11 +266,10 @@ export default function ListTodos () {
                                         Edit
                                     </Button></TableCell>
                                 <TableCell onClick={() => onChangeOwner(todo)} textAlign="center" title="click to change">
-                                    <p>ownerID: {todo.ownerId}</p>
-                                    <p>Owner Name: {todo.owner.name}</p>
+                                    {todo.ownerName}
                                 </TableCell>
                                 <TableCell textAlign="center" title="click to change">
-                                    {todo.assignedTo.name}
+                                    {todo.assignedToName}
                                 </TableCell>
                             </TableRow>
                         ))}
