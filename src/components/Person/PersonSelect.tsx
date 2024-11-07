@@ -1,5 +1,5 @@
 import { Autocomplete, Button, ComboBoxOption, Flex } from '@aws-amplify/ui-react';
-import { PersonType, TodoProps } from '../Interfaces';
+import { PersonType, PersonSelectProps } from '../Interfaces';
 import { useContext, useState } from 'react';
 import { AppDataContext } from '../../context/AppDataContext';
 
@@ -10,7 +10,7 @@ const peopleOptions = (people: Array<PersonType>): Array<ComboBoxOption> => {
     }));
 };
 
-const OwnerSelect: React.FC<TodoProps> = ({ todo, handleOnClose}) => {
+const PersonSelect: React.FC<PersonSelectProps> = ({ label, handleOnClose}) => {
     const context = useContext(AppDataContext)
     if (!context) throw new Error("AppContext is not available")
     const { people } = context 
@@ -21,16 +21,13 @@ const OwnerSelect: React.FC<TodoProps> = ({ todo, handleOnClose}) => {
 
     const handleSelect = () => {
         if (selectedId) {
-            if (todo) {
-                todo.ownerId = selectedId
-                handleOnClose(todo, false)
-            }else{
-                handleCancel()
-            }
+            handleOnClose(selectedId)
+        }else{
+            handleCancel()
         }
     }
     const handleCancel = () => {
-        handleOnClose({}, false)
+        handleOnClose('')
     }
 
     const options: Array<ComboBoxOption> = peopleOptions(people)
@@ -47,18 +44,11 @@ const OwnerSelect: React.FC<TodoProps> = ({ todo, handleOnClose}) => {
         setSelectedName(option.label)
         setValue(option.label)
     }
-    const autoCompleteLabel = () => {
-        var label: string = ''
-        if (todo) {
-            "Select Owner for " +  todo.content + "'"
-        }
-        return label
-    }
 
     return (
         <div>
             <Autocomplete
-                label={autoCompleteLabel()}
+                label={label}
                 options={options}
                 value={value}
                 onChange={onChange}
@@ -75,4 +65,4 @@ const OwnerSelect: React.FC<TodoProps> = ({ todo, handleOnClose}) => {
     );
 }
 
-export default OwnerSelect;
+export default PersonSelect;

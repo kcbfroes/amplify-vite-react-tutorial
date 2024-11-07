@@ -10,11 +10,11 @@ import { AppDataProvider } from "./context/AppDataContext.tsx";
 Amplify.configure(outputs);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+
     <ThemeProvider>
       <AppDataProvider>
         <App />
       </AppDataProvider>
     </ThemeProvider>
-  </React.StrictMode>
+
 );

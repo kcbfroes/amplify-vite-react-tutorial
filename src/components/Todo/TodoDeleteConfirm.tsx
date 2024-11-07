@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Label } from '@aws-amplify/ui-react';
+import { Button, Card, Flex } from '@aws-amplify/ui-react';
 import { TodoDeleteConfirmProps } from '../Interfaces';
 
 export default function TodoDeleteConfirm(props: TodoDeleteConfirmProps) {

@@ -15,7 +15,7 @@ import TodoTS from "./TodoTS";
 import { useContext, useState } from "react";
 import Modal from "../Modal";
 import TodoDeleteConfirm from "./TodoDeleteConfirm";
-import OwnerSelect from "./OwnerSelect";
+import PersonSelect from "../Person/PersonSelect";
 import { AppDataContext } from "../../context/AppDataContext";
   
 export default function ListTodos () {
@@ -37,7 +37,9 @@ export default function ListTodos () {
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-    const [selectOwnerOpen, setSelectOwnerOpen] = useState(false)
+    const [personSelectOpen, setPersonSelectOpen] = useState(false)
+    const [personSelectedUpdateOption, setPersonSelectedUpdateOption] = useState('')
+    const [selectPersonLabel , setSelectPersonLabel] = useState('')
 
     //------------------------------ Create ------------------------------
     const newTodo = () => {
@@ -68,7 +70,7 @@ export default function ListTodos () {
     }
     const editTodoClose = (changedTodo:Partial<TodoType>, cancelled: boolean) => {
         setEditOpen(false)
-        setSelectOwnerOpen(false)
+        setPersonSelectOpen(false)
         if (cancelled == false) {
             const mergedTodo: TodoType = Object.assign({}, todo, changedTodo)
             console.log("You changed the Todo. I'm about to call 'updateTodo' with: ", mergedTodo)
@@ -76,7 +78,7 @@ export default function ListTodos () {
         }
     }
     const updateTodo = async (todo: TodoType) => {
-        const todoKey: string = todo.content
+        const todoKey: string = '' + todo.content
 
         //Version 4: this does not work
         /*
@@ -101,7 +103,6 @@ export default function ListTodos () {
         }*/        
         
         //Version 2: this works but you'll have to update this code whenever the schema changes.
-        //However, note that while ownerId is updated, ownerName
         await client.models.Todo.update(
             {
             id: todo.id,
@@ -113,10 +114,9 @@ export default function ListTodos () {
         )
         .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
         .catch((error: any) => handleTodoError(error, "Update a ToDo", todoKey));
-                
-        //Why won't this update ownerId? The todo passed in has ownerId valued, and this command runs successfully, but,
-        //the todo object it returns does NOT have a value for ownerId (see console.log in handleTodoResult below)
-        /* Version 1: this does not work.
+        
+        // Version 1: this does not work. It did until I added ownerId and assignedToId
+        /*
         client.models.Todo.update(todo)
             .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
             .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Update a ToDo: ", todoKey));*/
@@ -130,8 +130,36 @@ export default function ListTodos () {
         updateTodo(todo)
     }
     const onChangeOwner = (todo: TodoType) => {
-        setSelectOwnerOpen(true)
+        setPersonSelectOpen(true)
+        setPersonSelectedUpdateOption('owner')
         setTodo(todo)
+        setSelectPersonLabel("Select an Owner for '" + todo.content + "' To Do")
+    }
+    const onChangeAssignedTo = (todo: TodoType) => {
+        setPersonSelectOpen(true)
+        setPersonSelectedUpdateOption('assigned')
+        setTodo(todo)
+        setSelectPersonLabel("Assign a Person to '" + todo.content + "' To Do")
+    }
+    const selectedPerson = (personId: string) => {
+        
+        setPersonSelectOpen(false)
+
+        if ( ! personId ) return
+        
+        if ( ! todo) {
+            throw new Error("Person Selected but no Todo is set");
+        }
+
+        if (personSelectedUpdateOption == 'owner') {
+            todo.ownerId = personId
+        }else if (personSelectedUpdateOption == 'assigned') {
+            todo.assignedToId = personId
+        }else{
+            throw new Error("Person Selected Update Option value '" + personSelectedUpdateOption + "' is not valid");
+        }
+
+        updateTodo(todo)
     }
     const ShowEditPopup = () => {
         if (editOpen == true) {
@@ -144,11 +172,11 @@ export default function ListTodos () {
             return (<></>)
         }
     }
-    const showOwnerSelect = () => {
-        if (selectOwnerOpen == true) {
+    const showPersonSelect = () => {
+        if (personSelectOpen == true) {
             return (
                 <Modal>
-                    <OwnerSelect todo={todo} handleOnClose={editTodoClose} />
+                    <PersonSelect label={selectPersonLabel} handleOnClose={selectedPerson} />
                 </Modal>
             )
         }else{
@@ -179,7 +207,7 @@ export default function ListTodos () {
         }
     }
     const deleteTodo = (deleteTodo: TodoType) => {
-        const todoKey: string = deleteTodo.content
+        const todoKey: string = '' + deleteTodo.content
         client.models.Todo.delete( {id:deleteTodo.id} )
             .then((result: any) => handleTodoResult(result, "Delete", todoKey))
             .catch((error: GraphQLFormattedError[]) => handleTodoError(error, "Delete", todoKey))
@@ -266,11 +294,10 @@ export default function ListTodos () {
                                         Edit
                                     </Button></TableCell>
                                 <TableCell onClick={() => onChangeOwner(todo)} textAlign="center" title="click to change">
-                                    <p>ownerID: {todo.ownerId}</p>
-                                    <p>Owner Name: {todo.owner.name}</p>
+                                    {todo.ownerName}
                                 </TableCell>
-                                <TableCell textAlign="center" title="click to change">
-                                    {todo.assignedTo.name}
+                                <TableCell onClick={() => onChangeAssignedTo(todo)} textAlign="center" title="click to change">
+                                    {todo.assignedToName}
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -279,7 +306,7 @@ export default function ListTodos () {
 
                 {ShowEditPopup()}
                 {showDeleteConfirm()}
-                {showOwnerSelect()}
+                {showPersonSelect()}
                 
                 <div>
                     {showAlerts()}
