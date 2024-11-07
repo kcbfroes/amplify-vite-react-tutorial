@@ -32,16 +32,10 @@ export default function PersonList () {
     const [alertVisible, setAlertVisible] = useState(false)
 
     //All other
-    const [personList, setPersonList] = useState<Array<PersonType>>([])
     const [person, setPerson] = useState<PersonType>()        //useState<PersonType>() makes "person" a type: PersonType | underfined
     const [createOpen, setCreateOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const [modalOpen, setModalOpen] = useState(false)
-
-    useEffect(() => {
-        setPersonList(people)
-        console.log("PersonList.tsx, refreshing personList", people)
-    }, [people]);
 
     //------------------------------ Create ------------------------------
     const newPerson = () => {
@@ -186,7 +180,7 @@ export default function PersonList () {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {personList.map((person: PersonType) => (
+                        {people.map((person: PersonType) => (
                             <TableRow key={person.id}>
                                 <TableCell>{person.name}</TableCell>
                                 <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
