@@ -38,11 +38,6 @@ export interface TodoDeleteConfirmProps {
     deleteTodo: (todo: TodoType) => void
 }
 
-export interface PersonListProps {
-    personList: Array<PersonType>
-    client: any
-}
-
 export interface PersonProps {
     person?: PersonType
     handleOnClose: (value: Partial<PersonType>, cancel:boolean) => void

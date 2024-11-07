@@ -1,5 +1,5 @@
 import PersonTS from "./PersonTS"
-import { GraphQLFormattedError, PersonListProps, PersonType } from "../Interfaces";
+import { GraphQLFormattedError, PersonType } from "../Interfaces";
 import {
     Table,
     TableCell,
@@ -12,11 +12,17 @@ import {
     Button,
     useTheme,
   } from '@aws-amplify/ui-react';
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Modal from "../Modal";
 import PersonDeleteConfirm from "./PersonDeleteConfirm";
+import { AppDataContext } from "../../context/AppDataContext";
 
-export default function PersonList ( props: PersonListProps ) {
+export default function PersonList () {
+    
+    const context = useContext(AppDataContext)
+    if (!context) throw new Error("AppContext is not available")
+    const { people, client } = context
+    
     const { tokens } = useTheme();
 
     //Alerts
@@ -33,9 +39,9 @@ export default function PersonList ( props: PersonListProps ) {
     const [modalOpen, setModalOpen] = useState(false)
 
     useEffect(() => {
-        setPersonList(...[props.personList])
-        console.log("PersonList, refreshing")
-    }, [props.personList]);
+        setPersonList(people)
+        console.log("PersonList.tsx, refreshing personList", people)
+    }, [people]);
 
     //------------------------------ Create ------------------------------
     const newPerson = () => {
@@ -52,7 +58,7 @@ export default function PersonList ( props: PersonListProps ) {
     const createPerson = (aPerson: Partial<PersonType>, cancelled:boolean) => {
         if ( !cancelled ) {
             const key: string = '' + aPerson.name
-            props.client.models.Person.create({ name: "" + aPerson.name })
+            client.models.Person.create({ name: "" + aPerson.name })
                 .then((result: any) => handleResult(result, "Create a Person", key))
                 .catch((error: GraphQLFormattedError[]) => handleError(error, "Create a Person", key));
             }
@@ -84,7 +90,7 @@ export default function PersonList ( props: PersonListProps ) {
     }
     const updatePerson = (person: PersonType) => {
         const key: string = person.name
-        props.client.models.Person.update(person)
+        client.models.Person.update(person)
             .then((result: any) => handleResult(result, "Update a Person", key))
             .catch((error: GraphQLFormattedError[]) => handleError(error, "Update a Person: ", key));
     }
@@ -110,7 +116,7 @@ export default function PersonList ( props: PersonListProps ) {
     }
     const deletePerson = (deletePerson: PersonType) => {
         const key: string = deletePerson.name
-        props.client.models.Person.delete( {id:deletePerson.id} )
+        client.models.Person.delete( {id:deletePerson.id} )
             .then((result: any) => handleResult(result, "Delete", key))
             .catch((error: GraphQLFormattedError[]) => handleError(error, "Delete", key))
     }  
@@ -181,20 +187,20 @@ export default function PersonList ( props: PersonListProps ) {
                     </TableHead>
                     <TableBody>
                         {personList.map((person: PersonType) => (
-                                <TableRow key={person.id}>
-                                    <TableCell>{person.name}</TableCell>
-                                    <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
-                                    <TableCell style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
-                                    <TableCell>
-                                        <Button onClick={() => confirmDelete(person)} variation="link">
-                                            Delete
-                                        </Button></TableCell>
-                                    <TableCell>
-                                        <Button onClick={() => editPerson(person)} variation="link">
-                                            Edit
-                                        </Button></TableCell>
-                                </TableRow>
-                            ))}
+                            <TableRow key={person.id}>
+                                <TableCell>{person.name}</TableCell>
+                                <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
+                                <TableCell style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
+                                <TableCell>
+                                    <Button onClick={() => confirmDelete(person)} variation="link">
+                                        Delete
+                                    </Button></TableCell>
+                                <TableCell>
+                                    <Button onClick={() => editPerson(person)} variation="link">
+                                        Edit
+                                    </Button></TableCell>
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
 

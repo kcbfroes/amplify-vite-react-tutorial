@@ -1,6 +1,4 @@
 import React, { useContext, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
 import { AlertVariations, Authenticator, Badge, Button, Card, Divider, Flex, Grid, Heading, Text, useTheme } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
 import ListTodos from "./components/Todo/ListTodos";
@@ -10,13 +8,11 @@ import NavMenu from "./components/Main/NavMenu";
 import PersonList from "./components/Person/PersonList";
 import { AppDataContext } from "./context/AppDataContext"
 
-const client = generateClient<Schema>();
-
 function App() {
   
   const context = useContext(AppDataContext)
   if (!context) throw new Error("AppContext is not available")
-  const { people, allDataSynced } = context
+  const { allDataSynced } = context
 
   //Navigation
   const [currentNavItem, setCurrentNavItem] = useState('ToDos')
@@ -57,9 +53,9 @@ function App() {
 
   const mainContent = () => {
     if (currentNavItem == "ToDos") {
-      return (<ListTodos />)
+      return (<ListTodos/>)
     }else if (currentNavItem == "People") {
-      return (<PersonList personList={people} client={client}/>)
+      return (<PersonList/>)
     }else{
       return (<div>I do not understand the Current Nav menu item: {currentNavItem}</div>)
     }
