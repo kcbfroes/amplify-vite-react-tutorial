@@ -34,7 +34,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
        ---> observeQuery() DOES NOT support nested data!
 
        */
-        const todoSubscription =client.models.Todo.observeQuery().subscribe({
+        const todoSubscription = client.models.Todo.observeQuery().subscribe({
             next: ({ items, isSynced }) => {
                 const newTodos = convertTodoItems(items)
                 setTodos([...newTodos])
