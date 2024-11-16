@@ -1,28 +1,33 @@
 import { act, render, screen } from '@testing-library/react'
 import App from './App'
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { AppDataContext } from './context/AppDataContext';
 import * as AmplifyUIReact from '@aws-amplify/ui-react'
 import { Hub } from 'aws-amplify/utils';
 import { CONNECTION_STATE_CHANGE } from 'aws-amplify/api';
+import { PersonType, TodoType } from './components/Interfaces';
 
-const mockContextValue = {
-  client: null, 
-  todos: [],
-  people: [],
-  allDataSynced: true,   
-};
+var mockContextValue: {client: any, todos: Array<TodoType>, people: Array<PersonType>, allDataSynced: boolean}
 
-//Mock Authenticator. This code is straight outa ChatGPT4o
-vi.mock('@aws-amplify/ui-react', async () => {
-  const actual = await vi.importActual<typeof AmplifyUIReact>('@aws-amplify/ui-react');
-  return {
-    ...actual,
-    Authenticator: ({ children }: any) => (
-      children({ signOut: vi.fn(), user: { signInDetails: { loginId: 'fakeUser' } } })
-    ),
+beforeEach(() => {
+  mockContextValue = {
+    client: null, 
+    todos: [],
+    people: [],
+    allDataSynced: true,   
   };
-});
+
+  //Mock Authenticator (Sign In). This code is straight outa ChatGPT4o
+  vi.mock('@aws-amplify/ui-react', async () => {
+    const actual = await vi.importActual<typeof AmplifyUIReact>('@aws-amplify/ui-react');
+    return {
+      ...actual,
+      Authenticator: ({ children }: any) => (
+        children({ signOut: vi.fn(), user: { signInDetails: { loginId: 'fakeUser' } } })
+      ),
+    };
+  });
+})
 
 // Cleanup after each test to prevent cross-test interference, straight outa ChatGPT4o
 afterEach(() => {
@@ -163,14 +168,16 @@ it('shows "error" status if API connection state is not "Connecting" or "Connect
 })
 
 describe('Context Validation', () => {
-  it('renders the App component if context is available', () => {
-    render(
-      <AppDataContext.Provider value={mockContextValue}>
-        <App />
-      </AppDataContext.Provider>
-    )
-    //screen.debug() this command should log the DOM structure in the test terminal window.
+  it('renders the App component if context is available', async () => {
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <App />
+        </AppDataContext.Provider>
+      )
+    })
   })
+  
   it('throws an error if app context is not available', () => {
     const result = () => render(<App/>)
     expect(result).toThrowError("AppContext is not available")

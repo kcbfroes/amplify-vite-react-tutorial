@@ -10,21 +10,25 @@ interface AppDataContextType {
     allDataSynced: boolean
 }
 
-const client = generateClient<Schema>();
-
 export const AppDataContext = createContext<AppDataContextType | undefined>(undefined);
 
 export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    
+    //we get the client here so we can mock it for testing
+    const client = generateClient<Schema>();
+
     const [todos, setTodos] = useState<Array<TodoType>>([])
     const [isTodoSynced, setIsTodoSynced] = useState(false)
 
     const [people, setPeople] = useState<Array<PersonType>>([])
     const [isPeopleSynced, setIsPeopleSynced] = useState(false)
 
-    const [allDataSynced, setAllDataSynced] = useState(false)    
+    const [allDataSynced, setAllDataSynced] = useState(false)
+
+    const [refreshPeople, setRefreshPeople] = useState(false)
+    const [refreshTodos, setRefreshTodos] = useState(false)
 
     useEffect(() => {
-
         /*
         While data is syncing from the cloud, snapshots will contain all of 
         the items synced so far and an isSynced = false. 
@@ -39,16 +43,15 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 const newTodos = convertTodoItems(items)
                 setTodos([...newTodos])
                 setIsTodoSynced(isSynced)
-                RefreshPeople(newTodos)
+                setRefreshPeople(true)
             },
         });
-
         const personSubscription = client.models.Person.observeQuery().subscribe({
             next: ({ items, isSynced }) => {
                 const newPeopleList = convertPeopleItems(items)
                 setPeople([...newPeopleList]);
                 setIsPeopleSynced(isSynced);
-                RefreshTodos(newPeopleList)
+                setRefreshTodos(true)
             },
         });
 
@@ -119,6 +122,16 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         if (isTodoSynced && isPeopleSynced) {
+            if (refreshTodos) {
+                RefreshTodos(people)
+                setRefreshTodos(false)
+            }
+
+            if (refreshPeople) {
+                RefreshPeople(todos)
+                setRefreshPeople(false)
+            }
+
             setAllDataSynced(true);
         }
 
