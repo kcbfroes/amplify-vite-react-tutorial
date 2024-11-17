@@ -17,7 +17,7 @@ beforeEach(() => {
     allDataSynced: true,   
   };
 
-  //Mock Authenticator (Sign In). This code is straight outa ChatGPT4o
+  //Mock Authenticator (Sign In). This code is straight outa ChatGPT4o. Default for testing is the user is signed in
   vi.mock('@aws-amplify/ui-react', async () => {
     const actual = await vi.importActual<typeof AmplifyUIReact>('@aws-amplify/ui-react');
     return {
@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe('Authentication', () => {
-  it('Signs User In', async () => {
+  it('Signs User In and shows the user ID', async () => {
     
     //You have to wrap it in "act" because, well, you just have to.
     await act(async () => {
@@ -52,6 +52,52 @@ describe('Authentication', () => {
     const userInfo = await screen.findByText(/fakeUser's todos/i)
     expect(userInfo).toBeInTheDocument();
   })
+})
+
+describe('Data Loading Status', () => {
+
+  it('indicates data is loading', async () => {
+    
+    mockContextValue = {
+      client: null, 
+      todos: [],
+      people: [],
+      allDataSynced: false,
+    };
+
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <App />
+        </AppDataContext.Provider>
+      )
+    })
+    
+    const userInfo = await screen.findByText(/data is loading.../i)
+    expect(userInfo).toBeInTheDocument();
+  })
+  
+  it('indicates data is all loaded', async () => {
+    
+    mockContextValue = {
+      client: null, 
+      todos: [],
+      people: [],
+      allDataSynced: true,
+    };
+
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <App />
+        </AppDataContext.Provider>
+      )
+    })
+    
+    const userInfo = await screen.findByText(/All data is loaded/i)
+    expect(userInfo).toBeInTheDocument();
+  })
+
 })
 
 describe("API Connection Status", () => {
