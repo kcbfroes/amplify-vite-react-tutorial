@@ -56,17 +56,27 @@ describe('Nav menu tests', () => {
 
     const todoButton = await screen.findByRole('button', {name: /To Dos/i})
     expect(todoButton).toBeInTheDocument();
-    await nav.click(todoButton)
-    //expect the list of To dos to be displayed: We should be able to find the "Create Todo" button
+    
+    // Todos should be shown by default
+    // expect the list of To dos to be displayed: We should be able to find the "Create Todo" button
     const createTodoButton = await screen.findByRole('button', {name: /Create Todo/i})    
     expect(createTodoButton).toBeInTheDocument();
     
-    const peopleButton = await screen.findByRole('button', {name: /To Dos/i})
+    // I should see a "People" button in the nav bar
+    const peopleButton = await screen.findByRole('button', {name: /People/i})
     expect(peopleButton).toBeInTheDocument();
+    // and when I click it, I shold see a list of people
     await nav.click(peopleButton)
-    //expect the list of People to be displayed: We should be able to find the "Create Person" button
+    // expect the list of People to be displayed: We should be able to find the "Create Person" button
     const createPersonButton = await screen.findByRole('button', {name: /Create Person/i})    
     expect(createPersonButton).toBeInTheDocument();
+
+    //clicking the To Dos button will show To Dos
+    await nav.click(todoButton)
+    const result = await screen.findByRole('button', {name: /Create Todo/i})    
+    expect(result).toBeInTheDocument();
+
+    //We could test that each button is highlighted when clicked.
 
   })
 
