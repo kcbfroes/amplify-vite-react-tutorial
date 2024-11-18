@@ -25,8 +25,8 @@ const PersonTS: React.FC<PersonProps> = ({ person, handleOnClose}) => {
     return (
         <div>
             <TextField
-                label='Description'
-                name='todoDescription'
+                label='User Name'
+                name='userName'
                 value={'' + name}
                 onChange={(e) => setName(e.target.value)}
             />

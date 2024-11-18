@@ -1,4 +1,4 @@
-import { act, getByText, render, screen, within } from '@testing-library/react'
+import { act, findByText, fireEvent, getByText, render, screen, within } from '@testing-library/react'
 import App from '../../App'
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { AppDataContext } from '../../context/AppDataContext';
@@ -48,7 +48,7 @@ function FindPerson(personId: string) {
 
 describe('People List', () => {
    
-  it('shows a list of all people in db', async () => {
+  it('shows a list of all people from the data context', async () => {
     
     await act(async () => {
       render(
@@ -59,12 +59,14 @@ describe('People List', () => {
     })
 
     //make sure we're on the People List. Click the person button in the nav bar
-    const nav = userEvent.setup()
-    await nav.click(screen.getByRole('button', {name: /People/i}))
+    const userAction = userEvent.setup()
+    await userAction.click(screen.getByRole('button', {name: /People/i}))
 
     const table = await screen.findByRole('table');
     const rows = within(table).getAllByRole('row');
 
+    //Kinda by default, this test ensures data is presented in the correct order of columns.
+    // How would you test that certain columns have actions associated with them?
     for (var row of rows) {  
 
       const personId = row.getAttribute('data-person-id');
@@ -77,10 +79,24 @@ describe('People List', () => {
         const actualName = cells[0].textContent;
         const actualOwned = cells[1].textContent;
         const actualAssigned = cells[2].textContent;
+        const deleteCell = cells[3];
+        const editCell = cells[4];
 
         expect(actualName).toEqual(name);
         expect(Number(actualOwned)).toEqual(ownedTodos.length);
         expect(Number(actualAssigned)).toEqual(assignedTodos.length);
+
+        const deletePerson = within(deleteCell).getByRole('button', {name: 'Delete'} )
+        fireEvent.click(deletePerson);
+        //we should see the delete confirmation appear
+        await screen.findByText(/delete this person?/i)
+        await userAction.click(screen.getByRole('button', {name: /Close/i}))
+
+        const editPerson = within(editCell).getByRole('button', {name: 'Edit'} )
+        fireEvent.click(editPerson);
+        //we should see the delete confirmation appear
+        await screen.findByText(/user name/i)
+        await userAction.click(screen.getByRole('button', {name: /Cancel/i}))
       }
     }
   })
