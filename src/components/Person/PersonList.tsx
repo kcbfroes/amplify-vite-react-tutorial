@@ -181,15 +181,15 @@ export default function PersonList () {
                     </TableHead>
                     <TableBody>
                         {people.map((person: PersonType) => (
-                            <TableRow key={person.id}>
-                                <TableCell>{person.name}</TableCell>
-                                <TableCell style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
-                                <TableCell style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
-                                <TableCell>
+                            <TableRow role="row" key={person.id} data-person-id={person.id}>
+                                <TableCell role="cell">{person.name}</TableCell>
+                                <TableCell role="cell" style={{ textAlign: 'center'}}>{person.ownedTodos.length}</TableCell>
+                                <TableCell role="cell" style={{ textAlign: 'center'}}>{person.assignedTodos.length}</TableCell>
+                                <TableCell role="cell">
                                     <Button onClick={() => confirmDelete(person)} variation="link">
                                         Delete
                                     </Button></TableCell>
-                                <TableCell>
+                                <TableCell role="cell">
                                     <Button onClick={() => editPerson(person)} variation="link">
                                         Edit
                                     </Button></TableCell>

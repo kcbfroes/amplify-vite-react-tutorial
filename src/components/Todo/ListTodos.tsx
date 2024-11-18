@@ -280,23 +280,23 @@ export default function ListTodos () {
                     </TableHead>
                     <TableBody>
                         {todos.map((todo: TodoType) => (
-                            <TableRow key={todo.id}>
-                                <TableCell>{todo.content}</TableCell>
-                                <TableCell onClick={() => toggleDone(todo)} textAlign="center" title="click to change">
+                            <TableRow role="row" key={todo.id} data-todo-id={todo.id}>
+                                <TableCell role="cell">{todo.content}</TableCell>
+                                <TableCell role="cell" onClick={() => toggleDone(todo)} textAlign="center" title="click to change">
                                     {todo.isDone ? "Yes" : "No"}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell role="cell">
                                     <Button onClick={() => confirmDelete(todo)} variation="link">
                                         Delete
                                     </Button></TableCell>
-                                <TableCell>
+                                <TableCell role="cell">
                                     <Button onClick={() => editTodo(todo)} variation="link">
                                         Edit
                                     </Button></TableCell>
-                                <TableCell onClick={() => onChangeOwner(todo)} textAlign="center" title="click to change">
+                                <TableCell role="cell" onClick={() => onChangeOwner(todo)} textAlign="center" title="click to change">
                                     {todo.ownerName}
                                 </TableCell>
-                                <TableCell onClick={() => onChangeAssignedTo(todo)} textAlign="center" title="click to change">
+                                <TableCell role="cell" onClick={() => onChangeAssignedTo(todo)} textAlign="center" title="click to change">
                                     {todo.assignedToName}
                                 </TableCell>
                             </TableRow>

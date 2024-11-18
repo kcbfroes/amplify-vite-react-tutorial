@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, getByText, render, screen, within } from '@testing-library/react'
 import App from '../../App'
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { AppDataContext } from '../../context/AppDataContext';
@@ -40,6 +40,12 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+function FindPerson(personId: string) {
+  for (var person of mockContextValue.people) {
+    if (person.id == personId) return person 
+  }
+}
+
 describe('People List', () => {
    
   it('shows a list of all people in db', async () => {
@@ -52,20 +58,31 @@ describe('People List', () => {
       )
     })
 
-  //make sure we're on the People List. Click the person button in the nav bar
-  const nav = userEvent.setup()
-  await nav.click(screen.getByRole('button', {name: /People/i}))
+    //make sure we're on the People List. Click the person button in the nav bar
+    const nav = userEvent.setup()
+    await nav.click(screen.getByRole('button', {name: /People/i}))
 
-    for (var person of FakePeople()) {
-      var result = await screen.findByText(person.name, {exact:false})
-      expect(result).toBeInTheDocument();
+    const table = await screen.findByRole('table');
+    const rows = within(table).getAllByRole('row');
 
-      //I can't use "findByText" to test for owned and assigned to counts (becasue there are multiple 1, 0, 3 etc.) on the screen.
-      //So even if a "findByText" value that matches only once, how do I know which person it goes with?
-      //How do I find specific rows of a table?  What is the best way to determine a cell in a table has a particular value?
-     
+    for (var row of rows) {  
+
+      const personId = row.getAttribute('data-person-id');
+      const personData = personId ? FindPerson(personId) : null;
+
+      if (personData) {
+        const { name, ownedTodos, assignedTodos } = personData;
+
+        const cells = within(row).getAllByRole('cell');
+        const actualName = cells[0].textContent;
+        const actualOwned = cells[1].textContent;
+        const actualAssigned = cells[2].textContent;
+
+        expect(actualName).toEqual(name);
+        expect(Number(actualOwned)).toEqual(ownedTodos.length);
+        expect(Number(actualAssigned)).toEqual(assignedTodos.length);
+      }
     }
-
   })
 
 })
