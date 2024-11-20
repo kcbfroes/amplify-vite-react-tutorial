@@ -1,28 +1,35 @@
 // Import necessary testing utilities
-import { act, render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { useContext } from 'react';
+import { act, render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeAll } from "vitest";
+import { useContext } from "react";
 
 // Mock generateClient to return a mock client directly inside vi.mock
 beforeAll(() => {
-  vi.mock('aws-amplify/api', () => {  
+  vi.mock("aws-amplify/api", () => {
     return {
       generateClient: () => ({
         models: {
-
           Todo: {
             observeQuery: vi.fn(() => {
               return {
                 subscribe: ({ next }: { next: Function }) => {
-                  if (typeof next === 'function') {
+                  if (typeof next === "function") {
                     next({
-                      items: [{ id: 'T1', content: 'Fake Task 1', isDone: false, ownerId: 'ABC', assignedToId: 'def' }],
+                      items: [
+                        {
+                          id: "T1",
+                          content: "Fake Task 1",
+                          isDone: false,
+                          ownerId: "ABC",
+                          assignedToId: "def",
+                        },
+                      ],
                       isSynced: true,
                     });
                   }
                   return { unsubscribe: vi.fn() };
                 },
-              }
+              };
             }),
           },
 
@@ -30,26 +37,25 @@ beforeAll(() => {
             observeQuery: vi.fn(() => {
               return {
                 subscribe: ({ next }: { next: Function }) => {
-                  if (typeof next === 'function') {
+                  if (typeof next === "function") {
                     next({
-                      items: [{ id: 'P1', name: 'Fake Person A',  }],
+                      items: [{ id: "P1", name: "Fake Person A" }],
                       isSynced: true,
                     });
                   }
                   return { unsubscribe: vi.fn() };
                 },
-              }
+              };
             }),
           },
-
         },
       }),
-    }
+    };
   });
 });
 
 //this import has to happen here so AppDataContext will get the mock client defined above.
-import { AppDataContext, AppDataProvider } from './AppDataContext';
+import { AppDataContext, AppDataProvider } from "./AppDataContext";
 
 // Define a test component, just for this module, to consume the context so we can test it.
 const TestComponent = () => {
@@ -60,15 +66,15 @@ const TestComponent = () => {
 
   return (
     <div>
-      <p>{allDataSynced ? 'Synced is Yes' : 'Synched is No'}</p>
+      <p>{allDataSynced ? "Synced is Yes" : "Synched is No"}</p>
       <p>{"Number of Todos:" + todos.length}</p>
       <p>{"Number of People:" + people.length}</p>
     </div>
   );
 };
 
-describe('AppDataContext', () => {
-  it('provides initial context values correctly', async () => {
+describe("AppDataContext", () => {
+  it("provides initial context values correctly", async () => {
     await act(async () => {
       render(
         <AppDataProvider>
@@ -77,13 +83,13 @@ describe('AppDataContext', () => {
       );
     });
 
-    var result = await screen.findByText(/Synced is Yes/i)
+    var result = await screen.findByText(/Synced is Yes/i);
     expect(result).toBeInTheDocument();
 
-    result = await screen.findByText(/Number of Todos:1/i)
+    result = await screen.findByText(/Number of Todos:1/i);
     expect(result).toBeInTheDocument();
 
-    result = await screen.findByText(/Number of People:1/i)
+    result = await screen.findByText(/Number of People:1/i);
     expect(result).toBeInTheDocument();
   });
 });

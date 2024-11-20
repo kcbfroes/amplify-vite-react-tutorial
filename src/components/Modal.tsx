@@ -1,27 +1,26 @@
-import { Flex, View } from '@aws-amplify/ui-react';
-import { ModalProps } from './Interfaces';
+import { Flex, View } from "@aws-amplify/ui-react";
+import { ModalProps } from "./Interfaces";
 
-const Modal = ( props: ModalProps ) => {
-
+const Modal = (props: ModalProps) => {
   return (
-    <Flex alignContent='center' alignItems='center'>
+    <Flex alignContent="center" alignItems="center">
+      <View
+        position="fixed"
+        top="25%"
+        left="25%"
+        padding="10px"
+        backgroundColor="rgba(0, 0, 0, 0.5)"
+        display="flex"
+      >
         <View
-            position='fixed'
-            top='25%'
-            left='25%'
-            padding='10px'
-            backgroundColor="rgba(0, 0, 0, 0.5)"
-            display="flex"
+          backgroundColor="white"
+          position="relative"
+          display="flex"
+          padding="50px"
         >
-            <View 
-              backgroundColor='white'
-              position='relative'
-              display='flex'
-              padding='50px'
-            >
-                {props.children}
-            </View>
+          {props.children}
         </View>
+      </View>
     </Flex>
   );
 };
