@@ -1,5 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
-import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
+import { describe, it, expect, vi} from "vitest";
 import { AppDataContext, AppDataProvider } from "./AppDataContext";
 import { useContext } from "react";
 import { generateClient } from "aws-amplify/api";
