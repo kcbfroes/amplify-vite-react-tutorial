@@ -6,6 +6,7 @@ import * as AmplifyUIReact from "@aws-amplify/ui-react";
 import { PersonType, TodoType } from "../../components/Interfaces";
 import { FakePeople, FakeTodos } from "../../Test/FakeData";
 import userEvent from "@testing-library/user-event";
+import PersonList from "./PersonList";
 
 var mockContextValue: {
   client: any;
@@ -14,9 +15,18 @@ var mockContextValue: {
   allDataSynced: boolean;
 };
 
+
 const mockData = () => {
   return {
-    client: null,
+    client: {
+      models: {
+        Person: {
+          create: vi.fn(),
+          update: vi.fn(),
+          delete: vi.fn(),
+        },
+      },
+    },
     todos: FakeTodos(),
     people: FakePeople(),
     allDataSynced: true,
@@ -54,6 +64,19 @@ function FindPerson(personId: string) {
 }
 
 describe("People List", () => {
+  it("Should display an error message when AppContext is not available", async () => {
+    await expect(async () => {
+      render(
+        <AppDataContext.Provider value={undefined}>
+          <PersonList />
+        </AppDataContext.Provider>
+      );
+    }).rejects.toThrow("AppContext is not available");
+
+    // Restore the original implementation
+    vi.restoreAllMocks();
+  });
+
   it("shows a list of all people from the data context", async () => {
     await act(async () => {
       render(
@@ -71,7 +94,6 @@ describe("People List", () => {
     const rows = within(table).getAllByRole("row");
 
     //Kinda by default, this test ensures data is presented in the correct order of columns.
-    // How would you test that certain columns have actions associated with them?
     for (var row of rows) {
       const personId = row.getAttribute("data-person-id");
       const personData = personId ? FindPerson(personId) : null;
@@ -107,5 +129,115 @@ describe("People List", () => {
         await userAction.click(screen.getByRole("button", { name: /Cancel/i }));
       }
     }
+  });
+
+  it("Should create a new person successfully and show a success alert", async () => {
+    const newPerson = { name: "John Doe" };
+
+   const createSpy = vi.spyOn(mockContextValue.client.models.Person, 'create')
+    .mockResolvedValue({ data: newPerson });
+
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <PersonList />
+        </AppDataContext.Provider>
+      );
+    });
+
+    const createButton = screen.getByText("Create Person");
+    await userEvent.click(createButton);
+
+    const personNameInput = screen.getByLabelText("User Name");
+    const submitButton = screen.getByText("Save");
+
+    await userEvent.type(personNameInput, newPerson.name);
+    await userEvent.click(submitButton);
+
+    expect(createSpy).toHaveBeenCalledWith({ name: newPerson.name, });
+
+    const successAlert = await screen.findByText(/Create a Person/);
+    expect(successAlert).toBeInTheDocument();
+    expect(
+      screen.getByText(`'${newPerson.name}' was successful`)
+    ).toBeInTheDocument();
+
+    createSpy.mockRestore();
+  });
+
+  it("Should update a new person successfully and show a success alert", async () => {
+    const newName = { name: "John Doe" };
+
+    const createSpy = vi.spyOn(mockContextValue.client.models.Person, 'update').mockResolvedValue({ data: newName });
+
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <PersonList />
+        </AppDataContext.Provider>
+      );
+    });
+
+    const updatedPerson = mockContextValue.people[0];
+    updatedPerson.name = newName.name;
+
+    const table = await screen.findByRole("tablebody");
+    const rows = within(table).getAllByRole("row");
+    const cells = within(rows[0]).getAllByRole("cell");
+    const editCell = cells[4];
+
+    //Click the "Edit" button for the first person
+    const editPerson = within(editCell).getByRole("button", { name: "Edit", });
+    fireEvent.click(editPerson);
+    const personNameInput = await screen.findByLabelText("User Name");
+    await userEvent.clear(personNameInput);
+    await userEvent.type(personNameInput, newName.name);  //type in the new name
+    const submitButton = screen.getByText("Save");
+    await userEvent.click(submitButton);
+
+    expect(createSpy).toHaveBeenCalledWith(updatedPerson);
+
+    const successAlert = await screen.findByText(/Update a Person/);
+    expect(successAlert).toBeInTheDocument();
+    expect(
+      screen.getByText(`'${newName.name}' was successful`)
+    ).toBeInTheDocument();
+
+    createSpy.mockRestore();
+  });
+
+  it("Should delete a person successfully and show a success alert", async () => {
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <PersonList />
+        </AppDataContext.Provider>
+      );
+    });
+
+    const deletedPerson = mockContextValue.people[0];    
+    const createSpy = vi.spyOn(mockContextValue.client.models.Person, 'delete')
+    .mockResolvedValue({ data: {id: deletedPerson.id} });
+
+    const table = await screen.findByRole("tablebody");
+    const rows = within(table).getAllByRole("row");
+    const cells = within(rows[0]).getAllByRole("cell");
+    const editCell = cells[3];  //delete button
+
+    //Click the "Delete" button for the first person
+    const deletePerson = within(editCell).getByRole("button", { name: "Delete", });
+    fireEvent.click(deletePerson);
+    const submitButton = screen.getByText("Confirm");
+    await userEvent.click(submitButton);
+
+    expect(createSpy).toHaveBeenCalledWith( {id: deletedPerson.id} );
+
+    const successAlert = await screen.findByText(/Delete a Person/);
+    expect(successAlert).toBeInTheDocument();
+    expect(
+      screen.getByText(`'${deletedPerson.name}' was successful`)
+    ).toBeInTheDocument();
+
+    createSpy.mockRestore();
   });
 });

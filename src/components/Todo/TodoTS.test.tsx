@@ -95,4 +95,5 @@ describe("TodoTS Component", () => {
     // Verify handleOnClose is called with an empty object and cancelled flag
     expect(mockHandleOnClose).toHaveBeenCalledWith({}, true);
   });
+
 });

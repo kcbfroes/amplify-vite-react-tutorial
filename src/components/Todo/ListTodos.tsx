@@ -23,6 +23,8 @@ export default function ListTodos() {
   if (!context) throw new Error("AppContext is not available");
   const { client, todos } = context;
 
+  console.log("ListTodos Re-rendered. Todos: ", todos);
+
   const { tokens } = useTheme();
 
   //Alerts
@@ -318,7 +320,7 @@ export default function ListTodos() {
               <TableCell as="th">Assigned To</TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody role="tablebody">
             {todos.map((todo: TodoType) => (
               <TableRow role="row" key={todo.id} data-todo-id={todo.id}>
                 <TableCell role="cell">{todo.content}</TableCell>
