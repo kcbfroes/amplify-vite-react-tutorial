@@ -1,11 +1,8 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import App from "../../App";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { AppDataContext } from "../../context/AppDataContext";
-import * as AmplifyUIReact from "@aws-amplify/ui-react";
 import { PersonType, TodoType } from "../../components/Interfaces";
 import { FakePeople, FakeTodos } from "../../Test/FakeData";
-import userEvent from "@testing-library/user-event";
 import ListTodos from "./ListTodos";
 
 var mockContextValue: {
@@ -67,8 +64,6 @@ describe("Todo List shows correct data", () => {
       const cells = within(row).getAllByRole("cell");
       const todoContent = cells[0].textContent;
       const isDone = cells[1].textContent;
-      const deleteCell = cells[2];
-      const editCell = cells[3];
       const ownerName = cells[4].textContent;
       const assignedName = cells[5].textContent;
 

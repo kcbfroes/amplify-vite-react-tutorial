@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import App from "./App";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { AppDataContext } from "./context/AppDataContext";
@@ -6,7 +6,6 @@ import * as AmplifyUIReact from "@aws-amplify/ui-react";
 import { Hub } from "aws-amplify/utils";
 import { CONNECTION_STATE_CHANGE } from "aws-amplify/api";
 import { PersonType, TodoType } from "./components/Interfaces";
-import userEvent from "@testing-library/user-event";
 
 var mockContextValue: {
   client: any;
