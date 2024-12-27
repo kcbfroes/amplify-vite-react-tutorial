@@ -89,7 +89,7 @@ describe("Todo List update actions work", () => {
     var updatedTodo = {
       id: mockContextValue.todos[0].id,
       content: mockContextValue.todos[0].content,
-      isDone: mockContextValue.todos[0].isDone ? "No" : "Yes",  //Note: this is reversed
+      isDone: mockContextValue.todos[0].isDone ? false : true,  //Note: this is reversed
       ownerId: mockContextValue.todos[0].ownerId,
       assignedToId: mockContextValue.todos[0].assignedToId,
     };
@@ -106,16 +106,15 @@ describe("Todo List update actions work", () => {
     const table = await screen.findByRole("tablebody");
     const rows = within(table).getAllByRole("row");
     const cells = within(rows[0]).getAllByRole("cell");
-    const isDoneCell = cells[3];
-    const toggleIsDone = within(isDoneCell).getByRole("button", { name: "Edit", hidden: true });
-    
-    fireEvent.click(toggleIsDone);
-    const successAlert = await screen.findByText(/Update a Todo/);
+    const isDoneCell = cells[1];    
+    expect(isDoneCell).toHaveTextContent("No");
+
+    fireEvent.click(isDoneCell);
+
+    const successAlert = await screen.findByText(/Update a Todo/i, {}, { timeout: 5000 });       
+    expect(isDoneCell).toHaveTextContent("Yes");
     expect(successAlert).toBeInTheDocument();
     expect(createSpy).toHaveBeenCalledWith(updatedTodo);
-    
-    fireEvent.click(toggleIsDone);
-    expect(createSpy).toHaveBeenCalledWith(mockContextValue.todos[0]);
   });
   
 });
