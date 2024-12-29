@@ -42,9 +42,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       prevTodos.map((item) => ({
         ...item,
         ownerName: item.ownerId ? indexedPeople[item.ownerId] : "",
-        assignedToName: item.assignedToId
-          ? indexedPeople[item.assignedToId]
-          : "",
+        assignedToName: item.assignedToId ? indexedPeople[item.assignedToId] : "",
       }))
     );
   }, []);
