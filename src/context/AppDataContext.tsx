@@ -20,9 +20,11 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   //we get the client here so we can mock it for testing
   const client = generateClient<Schema>();
 
+  const [dbTodos, setDBTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
   const [todos, setTodos] = useState<Array<TodoType>>([]);
   const [isTodoSynced, setIsTodoSynced] = useState(false);
 
+  const [dbPeople, setDBPeople] = useState<Array<Schema["Person"]["type"]>>([]);
   const [people, setPeople] = useState<Array<PersonType>>([]);
   const [isPeopleSynced, setIsPeopleSynced] = useState(false);
 
@@ -31,35 +33,35 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [refreshPeople, setRefreshPeople] = useState(false);
   const [refreshTodos, setRefreshTodos] = useState(false);
 
-  const RefreshTodos = useCallback((newPeople: Array<PersonType>) => {
+  const RefreshTodos = (newPeople: Array<Schema["Person"]["type"]>) => {
     const indexedPeople: { [key: string]: string | undefined } =
-      newPeople.reduce((indexedArray: { [key: string]: string }, person) => {
+      newPeople.reduce((indexedArray: { [key: string]: string | undefined }, person) => {
         indexedArray[person.id] = person.name;
         return indexedArray;
       }, {});
 
-    setTodos((prevTodos) =>
-      prevTodos.map((item) => ({
+      const newTodos = dbTodos.map((item) => ({
         ...item,
+        ownerId: item.ownerId ? String(item.ownerId) : "",
+        assignedToId: item.assignedToId ? String(item.assignedToId) : "",
         ownerName: item.ownerId ? indexedPeople[item.ownerId] : "",
         assignedToName: item.assignedToId ? indexedPeople[item.assignedToId] : "",
       }))
-    );
-  }, []);
 
-  const RefreshPeople = useCallback((newTodos: Array<TodoType>) => {
-    setPeople((prevPeople) =>
-      prevPeople.map((item) => ({
+    setTodos(newTodos);
+  };
+
+  const RefreshPeople = (newTodos: Array<Schema["Todo"]["type"]>) => {
+    const newPeople = dbPeople.map((item) => ({
         ...item,
-        ownedTodos: newTodos.filter((todo) => todo.ownerId === item.id),
-        assignedTodos: newTodos.filter((todo) => todo.assignedToId === item.id),
-      }))
+        ownedTodos: convertTodoItems(newTodos.filter((todo) => todo.ownerId === item.id)),
+        assignedTodos: convertTodoItems(newTodos.filter((todo) => todo.assignedToId === item.id)),
+      })
     );
-  }, []);
+    setPeople(newPeople);
+  };
 
-  function convertTodoItems(
-    todos: Array<Schema["Todo"]["type"]>
-  ): Array<TodoType> {
+  function convertTodoItems(todos: Array<Schema["Todo"]["type"]>): Array<TodoType> {
     const indexedPeople: { [key: string]: string | undefined } =
       people.reduce((indexedArray: { [key: string]: string }, person) => {
         indexedArray[person.id] = person.name;
@@ -79,17 +81,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     }));
   }
 
-  function convertPeopleItems(
-    people: Array<Schema["Person"]["type"]>
-  ): Array<PersonType> {
-    return people.map((item) => ({
-      id: item.id,
-      name: item.name,
-      ownedTodos: todos.filter((todo) => todo.ownerId === item.id),
-      assignedTodos: todos.filter((todo) => todo.assignedToId === item.id),
-    }));
-  }
-
   useEffect(() => {
     /*
         While data is syncing from the cloud, snapshots will contain all of 
@@ -101,19 +92,19 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
     */
     const todoSubscription = client.models.Todo.observeQuery().subscribe({
-      next: ({ items, isSynced }) => {
-        const newTodos = convertTodoItems(items);
-        setTodos([...newTodos]);
+      next: ({ items, isSynced }) => {        
+        setDBTodos(items);
         setIsTodoSynced(isSynced);
         setRefreshPeople(true);
+        setRefreshTodos(true);
       },
     });
     const personSubscription = client.models.Person.observeQuery().subscribe({
       next: ({ items, isSynced }) => {
-        const newPeopleList = convertPeopleItems(items);
-        setPeople([...newPeopleList]);
+        setDBPeople(items);
         setIsPeopleSynced(isSynced);
         setRefreshTodos(true);
+        setRefreshPeople(true);
       },
     });
 
@@ -125,18 +116,20 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (isTodoSynced && isPeopleSynced) {
+      
       if (refreshTodos) {        
-        RefreshTodos(people);
+        RefreshTodos(dbPeople);
         setRefreshTodos(false);
       }
 
       if (refreshPeople) {
-        RefreshPeople(todos);
+        RefreshPeople(dbTodos);
         setRefreshPeople(false);
       }
 
       setAllDataSynced(true);
     }
+    console.log("todos", dbTodos);
   }, [isTodoSynced, isPeopleSynced, refreshTodos, refreshPeople, RefreshTodos, RefreshPeople, todos, people]);
 
   return (
