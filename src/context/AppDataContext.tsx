@@ -29,56 +29,58 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isPeopleSynced, setIsPeopleSynced] = useState(false);
 
   const [allDataSynced, setAllDataSynced] = useState(false);
+  const [refreshData, setRefreshData] = useState(false);
 
-  const [refreshPeople, setRefreshPeople] = useState(false);
-  const [refreshTodos, setRefreshTodos] = useState(false);
+  const RefreshTodos = useCallback(
+    (newPeople: Array<Schema["Person"]["type"]>) => {
+      const indexedPeople: { [key: string]: string | undefined } =
+        newPeople.reduce((indexedArray: { [key: string]: string | undefined }, person) => {
+          indexedArray[person.id] = person.name;
+          return indexedArray;
+        }, {});
 
-  const RefreshTodos = (newPeople: Array<Schema["Person"]["type"]>) => {
-    const indexedPeople: { [key: string]: string | undefined } =
-      newPeople.reduce((indexedArray: { [key: string]: string | undefined }, person) => {
-        indexedArray[person.id] = person.name;
-        return indexedArray;
-      }, {});
+        const newTodos = dbTodos.map((item) => ({
+          ...item,
+          ownerId: item.ownerId ? String(item.ownerId) : "",
+          assignedToId: item.assignedToId ? String(item.assignedToId) : "",
+          ownerName: item.ownerId ? indexedPeople[item.ownerId] : "",
+          assignedToName: item.assignedToId ? indexedPeople[item.assignedToId] : "",
+        }))
 
-      const newTodos = dbTodos.map((item) => ({
-        ...item,
-        ownerId: item.ownerId ? String(item.ownerId) : "",
-        assignedToId: item.assignedToId ? String(item.assignedToId) : "",
+      setTodos(newTodos);
+  }, 
+    [dbTodos]
+  );
+
+  const RefreshPeople = useCallback(
+    (newTodos: Array<Schema["Todo"]["type"]>) => {
+      const newPeople = dbPeople.map((item) => ({
+          ...item,
+          ownedTodos: convertTodoItems(newTodos.filter((todo) => todo.ownerId === item.id)),
+          assignedTodos: convertTodoItems(newTodos.filter((todo) => todo.assignedToId === item.id)),
+        })
+      );
+      setPeople(newPeople);
+  },
+    [dbPeople]
+  );
+
+  function convertTodoItems(dbTodos: Array<Schema["Todo"]["type"]>): Array<TodoType> {
+      const indexedPeople: { [key: string]: string | undefined } =
+        dbPeople.reduce((indexedArray: { [key: string]: string }, person) => {
+          indexedArray[person.id] = person.name;
+          return indexedArray;
+        }, {});
+
+      return dbTodos.map((item) => ({
+        id: item.id,
+        content: item.content,
+        isDone: item.isDone,
+        ownerId: "" + item.ownerId,
         ownerName: item.ownerId ? indexedPeople[item.ownerId] : "",
+        assignedToId: "" + item.assignedToId,
         assignedToName: item.assignedToId ? indexedPeople[item.assignedToId] : "",
-      }))
-
-    setTodos(newTodos);
-  };
-
-  const RefreshPeople = (newTodos: Array<Schema["Todo"]["type"]>) => {
-    const newPeople = dbPeople.map((item) => ({
-        ...item,
-        ownedTodos: convertTodoItems(newTodos.filter((todo) => todo.ownerId === item.id)),
-        assignedTodos: convertTodoItems(newTodos.filter((todo) => todo.assignedToId === item.id)),
-      })
-    );
-    setPeople(newPeople);
-  };
-
-  function convertTodoItems(todos: Array<Schema["Todo"]["type"]>): Array<TodoType> {
-    const indexedPeople: { [key: string]: string | undefined } =
-      people.reduce((indexedArray: { [key: string]: string }, person) => {
-        indexedArray[person.id] = person.name;
-        return indexedArray;
-      }, {});
-
-    return todos.map((item) => ({
-      id: item.id,
-      content: item.content,
-      isDone: item.isDone,
-      ownerId: "" + item.ownerId,
-      ownerName: item.ownerId ? indexedPeople[item.ownerId] : "",
-      assignedToId: "" + item.assignedToId,
-      assignedToName: item.assignedToId
-        ? indexedPeople[item.assignedToId]
-        : "",
-    }));
+      }));
   }
 
   useEffect(() => {
@@ -95,17 +97,17 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       next: ({ items, isSynced }) => {        
         setDBTodos(items);
         setIsTodoSynced(isSynced);
-        setRefreshPeople(true);
-        setRefreshTodos(true);
+        setRefreshData(true)
       },
+      error: (err) => {console.error("Todo subscription error:", err);}
     });
     const personSubscription = client.models.Person.observeQuery().subscribe({
       next: ({ items, isSynced }) => {
         setDBPeople(items);
         setIsPeopleSynced(isSynced);
-        setRefreshTodos(true);
-        setRefreshPeople(true);
+        setRefreshData(true);
       },
+      error: (err) => {console.error("Person subscription error:", err);}
     });
 
     return () => {
@@ -115,22 +117,15 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useEffect(() => {
-    if (isTodoSynced && isPeopleSynced) {
-      
-      if (refreshTodos) {        
+    if (isTodoSynced && isPeopleSynced) {       
+      setAllDataSynced(true);     
+      if (refreshData) {        
         RefreshTodos(dbPeople);
-        setRefreshTodos(false);
-      }
-
-      if (refreshPeople) {
         RefreshPeople(dbTodos);
-        setRefreshPeople(false);
+        setRefreshData(false);
       }
-
-      setAllDataSynced(true);
     }
-    console.log("todos", dbTodos);
-  }, [isTodoSynced, isPeopleSynced, refreshTodos, refreshPeople, RefreshTodos, RefreshPeople, todos, people]);
+  }, [isTodoSynced, isPeopleSynced, refreshData, dbPeople, dbTodos, RefreshTodos, RefreshPeople]);
 
   return (
     <AppDataContext.Provider value={{ client, todos, people, allDataSynced }}>
