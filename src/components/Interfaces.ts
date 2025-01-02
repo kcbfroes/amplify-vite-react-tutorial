@@ -3,8 +3,8 @@ import { Schema } from "../../amplify/data/resource";
 //this simply will NOT do. The Schema is too complicate to repeat.
 //Instead, we should just define what our Todo and Person looks like.
 //I'm hoping we can the use the basic types to update the DB.
-export type oldTodoType = Schema["Todo"]["type"];
-export type oldPersonType = Schema["Person"]["type"];
+export type dbTodoType = Schema["Todo"]["type"];
+export type dbPersonType = Schema["Person"]["type"];
 //New Types:
 export type TodoType = {
   id: string;

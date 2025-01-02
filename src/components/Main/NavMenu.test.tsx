@@ -4,7 +4,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { AppDataContext } from "../../context/AppDataContext";
 import * as AmplifyUIReact from "@aws-amplify/ui-react";
 import { PersonType, TodoType } from "../../components/Interfaces";
-import { FakePeople, FakeTodos } from "../../Test/FakeData";
+import { dbPeople, dbTodos } from "../../Test/FakeData";
 import userEvent from "@testing-library/user-event";
 
 var mockContextValue: {
@@ -17,8 +17,8 @@ var mockContextValue: {
 const mockData = () => {
   return {
     client: null,
-    todos: FakeTodos(),
-    people: FakePeople(),
+    todos: dbTodos(),
+    people: dbPeople(),
     allDataSynced: true,
   };
 };
@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 describe("Nav menu tests", () => {
-  it("it has a button for To Dos", async () => {
+  it("has buttons for navigation", async () => {
     await act(async () => {
       render(
         <AppDataContext.Provider value={mockContextValue}>

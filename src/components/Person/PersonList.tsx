@@ -121,7 +121,7 @@ export default function PersonList() {
   const deletePerson = (deletePerson: PersonType) => {
     const key: string = deletePerson.name;
     client.models.Person.delete({ id: deletePerson.id })
-      .then((result: any) => handleResult(result, "Delete", key))
+      .then((result: any) => handleResult(result, "Delete a Person", key))
       .catch((error: GraphQLFormattedError[]) =>
         handleError(error, "Delete", key)
       );
@@ -210,7 +210,7 @@ export default function PersonList() {
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody role="tablebody">
             {people.map((person: PersonType) => (
               <TableRow role="row" key={person.id} data-person-id={person.id}>
                 <TableCell role="cell">{person.name}</TableCell>

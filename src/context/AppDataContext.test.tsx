@@ -1,6 +1,7 @@
 // Import necessary testing utilities
 import { act, render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeAll } from "vitest";
+import { dbPeople, dbTodos, FakePeople, FakeTodos } from "../Test/FakeData";
 import { useContext } from "react";
 
 // Mock generateClient to return a mock client directly inside vi.mock
@@ -15,15 +16,7 @@ beforeAll(() => {
                 subscribe: ({ next }: { next: Function }) => {
                   if (typeof next === "function") {
                     next({
-                      items: [
-                        {
-                          id: "T1",
-                          content: "Fake Task 1",
-                          isDone: false,
-                          ownerId: "ABC",
-                          assignedToId: "def",
-                        },
-                      ],
+                      items: dbTodos(), //note that we give it dbTodos here
                       isSynced: true,
                     });
                   }
@@ -39,7 +32,7 @@ beforeAll(() => {
                 subscribe: ({ next }: { next: Function }) => {
                   if (typeof next === "function") {
                     next({
-                      items: [{ id: "P1", name: "Fake Person A" }],
+                      items: dbPeople(),  //Note that we give it dbPeople here
                       isSynced: true,
                     });
                   }
@@ -69,6 +62,33 @@ const TestComponent = () => {
       <p>{allDataSynced ? "Synced is Yes" : "Synched is No"}</p>
       <p>{"Number of Todos:" + todos.length}</p>
       <p>{"Number of People:" + people.length}</p>
+
+      <h3>Todo List</h3>
+      {todos.length > 0 ? (
+        <ul>
+          {todos.map((todo, index) => (
+            <li key={todo.id || index}>
+              {`ID: ${todo.id} Content: ${todo.content} OwnerName: ${todo.ownerName} AssignedName: ${todo.assignedToName}`}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No todos found</p>
+      )}
+
+      <h3>People List</h3>
+      {people.length > 0 ? (
+        <ul>
+          {people.map((person, index) => (
+            <li key={person.id || index}>
+              {`ID: ${person.id} Name: ${person.name} Owned: ${person.ownedTodos.length} Assigned: ${person.assignedTodos.length}`}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No people found</p>
+      )}
+
     </div>
   );
 };
@@ -86,10 +106,24 @@ describe("AppDataContext", () => {
     var result = await screen.findByText(/Synced is Yes/i);
     expect(result).toBeInTheDocument();
 
-    result = await screen.findByText(/Number of Todos:1/i);
+    result = await screen.findByText(/Number of Todos:6/i);
     expect(result).toBeInTheDocument();
 
-    result = await screen.findByText(/Number of People:1/i);
+    result = await screen.findByText(/Number of People:4/i);
     expect(result).toBeInTheDocument();
+
+    //FakeTodos() is what we expect the Context to convert the dbTodos() into.
+    for (var todo of FakeTodos()) {
+      const expected = `ID: ${todo.id} Content: ${todo.content} OwnerName: ${todo.ownerName} AssignedName: ${todo.assignedToName}`
+      result = await screen.findByText(expected);
+      expect(result).toBeInTheDocument();
+    }
+
+    //FakePeople() is what we expect the Context to convert dbPeople into.
+    for (var person of FakePeople()) {
+      const expected = `ID: ${person.id} Name: ${person.name} Owned: ${person.ownedTodos.length} Assigned: ${person.assignedTodos.length}`
+      result = await screen.findByText(expected);
+      expect(result).toBeInTheDocument();
+    }
   });
 });

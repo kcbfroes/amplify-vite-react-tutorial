@@ -142,84 +142,84 @@ describe("API Connection Status", () => {
     // Cleanup
     hubListenMock.mockRestore();
   });
-});
 
-it('shows "Connected" status if API connection state is "Connected"', async () => {
-  const connectionState = "Connected";
+  it('shows "Connected" status if API connection state is "Connected"', async () => {
+    const connectionState = "Connected";
 
-  //Note the "mockImplementationOnce" insted of "mockImplementation".
-  // This is so we trigger only 1 time. If you just use "mockImplementation", you'll get too many re-renders.
-  const hubListenMock = vi
-    .spyOn(Hub, "listen")
-    .mockImplementationOnce((channel, callback) => {
-      if (channel === "api") {
-        callback({
-          channel,
-          payload: {
-            event: CONNECTION_STATE_CHANGE,
-            data: { connectionState: connectionState },
-          },
-        });
-      }
-      return () => {}; // return a noop function for cleanup
+    //Note the "mockImplementationOnce" insted of "mockImplementation".
+    // This is so we trigger only 1 time. If you just use "mockImplementation", you'll get too many re-renders.
+    const hubListenMock = vi
+      .spyOn(Hub, "listen")
+      .mockImplementationOnce((channel, callback) => {
+        if (channel === "api") {
+          callback({
+            channel,
+            payload: {
+              event: CONNECTION_STATE_CHANGE,
+              data: { connectionState: connectionState },
+            },
+          });
+        }
+        return () => {}; // return a noop function for cleanup
+      });
+
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <App />
+        </AppDataContext.Provider>
+      );
     });
+    //wait for the simulated user sign in
+    await screen.findByText(/fakeUser's todos/i);
 
-  await act(async () => {
-    render(
-      <AppDataContext.Provider value={mockContextValue}>
-        <App />
-      </AppDataContext.Provider>
-    );
+    // Check if the "Connecting" badge is displayed
+    const apiBadge = await screen.findByText(connectionState);
+    expect(apiBadge).toBeInTheDocument();
+    expect(apiBadge).toHaveClass("amplify-badge--success");
+
+    // Cleanup
+    hubListenMock.mockRestore();
   });
-  //wait for the simulated user sign in
-  await screen.findByText(/fakeUser's todos/i);
 
-  // Check if the "Connecting" badge is displayed
-  const apiBadge = await screen.findByText(connectionState);
-  expect(apiBadge).toBeInTheDocument();
-  expect(apiBadge).toHaveClass("amplify-badge--success");
+  it('shows "error" status if API connection state is not "Connecting" or "Connected"', async () => {
+    const connectionState = "whatever";
 
-  // Cleanup
-  hubListenMock.mockRestore();
-});
+    //Note the "mockImplementationOnce" insted of "mockImplementation".
+    // This is so we trigger only 1 time. If you just use "mockImplementation", you'll get too many re-renders.
+    const hubListenMock = vi
+      .spyOn(Hub, "listen")
+      .mockImplementationOnce((channel, callback) => {
+        if (channel === "api") {
+          callback({
+            channel,
+            payload: {
+              event: CONNECTION_STATE_CHANGE,
+              data: { connectionState: connectionState },
+            },
+          });
+        }
+        return () => {}; // return a noop function for cleanup
+      });
 
-it('shows "error" status if API connection state is not "Connecting" or "Connected"', async () => {
-  const connectionState = "whatever";
-
-  //Note the "mockImplementationOnce" insted of "mockImplementation".
-  // This is so we trigger only 1 time. If you just use "mockImplementation", you'll get too many re-renders.
-  const hubListenMock = vi
-    .spyOn(Hub, "listen")
-    .mockImplementationOnce((channel, callback) => {
-      if (channel === "api") {
-        callback({
-          channel,
-          payload: {
-            event: CONNECTION_STATE_CHANGE,
-            data: { connectionState: connectionState },
-          },
-        });
-      }
-      return () => {}; // return a noop function for cleanup
+    await act(async () => {
+      render(
+        <AppDataContext.Provider value={mockContextValue}>
+          <App />
+        </AppDataContext.Provider>
+      );
     });
+    //wait for the simulated user sign in
+    await screen.findByText(/fakeUser's todos/i);
 
-  await act(async () => {
-    render(
-      <AppDataContext.Provider value={mockContextValue}>
-        <App />
-      </AppDataContext.Provider>
-    );
+    // Check if the "Connecting" badge is displayed
+    const apiBadge = await screen.findByText(connectionState);
+    expect(apiBadge).toBeInTheDocument();
+    expect(apiBadge).toHaveClass("amplify-badge--error");
+
+    // Cleanup
+    hubListenMock.mockRestore();
   });
-  //wait for the simulated user sign in
-  await screen.findByText(/fakeUser's todos/i);
-
-  // Check if the "Connecting" badge is displayed
-  const apiBadge = await screen.findByText(connectionState);
-  expect(apiBadge).toBeInTheDocument();
-  expect(apiBadge).toHaveClass("amplify-badge--error");
-
-  // Cleanup
-  hubListenMock.mockRestore();
 });
 
 describe("Context Validation", () => {
