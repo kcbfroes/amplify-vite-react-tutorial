@@ -23,8 +23,6 @@ export default function ListTodos() {
   if (!context) throw new Error("AppContext is not available");
   const { client, todos } = context;
 
-  console.log("ListTodos Re-rendered. Todos: ", todos);
-
   const { tokens } = useTheme();
 
   //Alerts
@@ -39,8 +37,7 @@ export default function ListTodos() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [personSelectOpen, setPersonSelectOpen] = useState(false);
-  const [personSelectedUpdateOption, setPersonSelectedUpdateOption] =
-    useState("");
+  const [personSelectedUpdateOption, setPersonSelectedUpdateOption] = useState("");
   const [selectPersonLabel, setSelectPersonLabel] = useState("");
 
   //------------------------------ Create ------------------------------
@@ -58,10 +55,7 @@ export default function ListTodos() {
   const createTodo = (aTodo: Partial<TodoType>, cancelled: boolean) => {
     if (!cancelled) {
       const todoKey: string = "" + aTodo.content;
-      client.models.Todo.create({
-        content: "" + aTodo.content,
-        isDone: aTodo.isDone,
-      })
+      client.models.Todo.create({content: "" + aTodo.content, isDone: aTodo.isDone,})
         .then((result: any) =>
           handleTodoResult(result, "Create a ToDo", todoKey)
         )
@@ -85,10 +79,6 @@ export default function ListTodos() {
     setPersonSelectOpen(false);
     if (cancelled == false) {
       const mergedTodo: TodoType = Object.assign({}, todo, changedTodo);
-      console.log(
-        "You changed the Todo. I'm about to call 'updateTodo' with: ",
-        mergedTodo
-      );
       updateTodo(mergedTodo);
     }
   };

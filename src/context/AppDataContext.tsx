@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
-import { TodoType, PersonType } from "../components/Interfaces"; // Import your types
+import { TodoType, PersonType, dbTodoType, dbPersonType } from "../components/Interfaces"; // Import your types
 import { generateClient } from "aws-amplify/api";
 import type { Schema } from "../../amplify/data/resource";
 
@@ -20,11 +20,11 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   //we get the client here so we can mock it for testing
   const client = generateClient<Schema>();
 
-  const [dbTodos, setDBTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [dbTodos, setDBTodos] = useState<Array<dbTodoType>>([]);
   const [todos, setTodos] = useState<Array<TodoType>>([]);
   const [isTodoSynced, setIsTodoSynced] = useState(false);
 
-  const [dbPeople, setDBPeople] = useState<Array<Schema["Person"]["type"]>>([]);
+  const [dbPeople, setDBPeople] = useState<Array<dbPersonType>>([]);
   const [people, setPeople] = useState<Array<PersonType>>([]);
   const [isPeopleSynced, setIsPeopleSynced] = useState(false);
 
@@ -32,7 +32,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [refreshData, setRefreshData] = useState(false);
 
   const RefreshTodos = useCallback(
-    (newPeople: Array<Schema["Person"]["type"]>) => {
+    (newPeople: Array<dbPersonType>) => {
       const indexedPeople: { [key: string]: string | undefined } =
         newPeople.reduce((indexedArray: { [key: string]: string | undefined }, person) => {
           indexedArray[person.id] = person.name;
@@ -53,7 +53,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const RefreshPeople = useCallback(
-    (newTodos: Array<Schema["Todo"]["type"]>) => {
+    (newTodos: Array<dbTodoType>) => {
       const newPeople = dbPeople.map((item) => ({
           ...item,
           ownedTodos: convertTodoItems(newTodos.filter((todo) => todo.ownerId === item.id)),
@@ -65,7 +65,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     [dbPeople]
   );
 
-  function convertTodoItems(dbTodos: Array<Schema["Todo"]["type"]>): Array<TodoType> {
+  function convertTodoItems(dbTodos: Array<dbTodoType>): Array<TodoType> {
       const indexedPeople: { [key: string]: string | undefined } =
         dbPeople.reduce((indexedArray: { [key: string]: string }, person) => {
           indexedArray[person.id] = person.name;
