@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { TodoType, PersonType, dbTodoType, dbPersonType } from "../components/Interfaces"; // Import your types
 import { generateClient } from "aws-amplify/api";
-import type { Schema } from "../../amplify/data/resource";
+import { data, type Schema } from "../../amplify/data/resource";
 
 interface AppDataContextType {
   client: any;
@@ -84,36 +84,100 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   }
 
   useEffect(() => {
-    /*
-        While data is syncing from the cloud, snapshots will contain all of 
-        the items synced so far and an isSynced = false. 
-        When the sync process is complete, a snapshot will be emitted with
-        all the records in the local store and an isSynced = true.
-        
-        ---> observeQuery() DOES NOT support nested data!
+    const fetchTodos = async () => {
+      try {
+        const { data: todoList, errors } = await client.models.Todo.list();
+        if (errors) {
+          console.error(errors);
+        } else {
+          setDBTodos(todoList);
+          setIsTodoSynced(true);
+          setRefreshData(true)
+        }
+      } catch (error) {
+        console.error('Error fetching Todos:', error);
+      }
+    };
+    fetchTodos();
 
-    */
-    const todoSubscription = client.models.Todo.observeQuery().subscribe({
-      next: ({ items, isSynced }) => {        
-        setDBTodos(items);
-        setIsTodoSynced(isSynced);
-        setRefreshData(true)
-      },
-      error: (err) => {console.error("Todo subscription error:", err);}
-    });
-    const personSubscription = client.models.Person.observeQuery().subscribe({
-      next: ({ items, isSynced }) => {
-        setDBPeople(items);
-        setIsPeopleSynced(isSynced);
+    const fetchPeople = async () => {
+      try {
+        const { data: peopleList, errors } = await client.models.Person.list();
+        if (errors) {
+          console.error(errors);
+        } else {
+          setDBPeople(peopleList);
+          setIsPeopleSynced(true);
+          setRefreshData(true);
+        }
+      } catch (error) {
+        console.error('Error fetching People:', error);
+      }
+    };
+    fetchPeople();
+
+    //Todo Subscriptions
+    const todoCreateSub = client.models.Todo.onCreate().subscribe({
+      next: (newTodo: dbTodoType) => {
+        setDBTodos((prevTodos) => [...prevTodos, newTodo]);
+        setIsTodoSynced(true);
         setRefreshData(true);
       },
-      error: (err) => {console.error("Person subscription error:", err);}
+      error: (error: any) => { console.warn('Error creating Todo:', error); },
+    });
+    const todoUpdateSub = client.models.Todo.onUpdate().subscribe({
+      next: (updatedTodo: dbTodoType) => {
+        setDBTodos((prevTodo) =>  prevTodo.map((todo) => todo.id === updatedTodo.id ? updatedTodo : todo));
+        setIsTodoSynced(true);
+        setRefreshData(true);
+      },
+      error: (error: any) => { console.warn('Error updating Todo:', error); },
+    });
+    const todoDeleteSub = client.models.Todo.onDelete().subscribe({
+      next: (deletedTodo: dbTodoType) => {
+      setDBTodos((prevTodos) => prevTodos.filter(todo => todo.id !== deletedTodo.id));
+      setIsTodoSynced(true);
+      setRefreshData(true);
+      },
+      error: (error: any) => { console.warn('Error deleting Todo:', error); },
+    });    
+
+    //People Subscriptions
+    const peopleCreateSub = client.models.Person.onCreate().subscribe({
+      next: (newPerson: dbPersonType) => {
+        setDBPeople((prevPerson) => [...prevPerson, newPerson]);
+        setIsPeopleSynced(true);
+        setRefreshData(true);
+      },
+      error: (error: any) => { console.warn('Error creating Person:', error); },
+    });
+    const peopleUpdateSub = client.models.Person.onUpdate().subscribe({
+      next: (updatedPerson: dbPersonType) => {
+        setDBPeople((prevPeople) =>  prevPeople.map((person) => person.id === updatedPerson.id ? updatedPerson : person));
+        setIsPeopleSynced(true);
+        setRefreshData(true);
+      },
+      error: (error: any) => { console.warn('Error updating Person:', error); },
+    });
+    const peopleDeleteSub = client.models.Person.onDelete().subscribe({
+      next: (deletedPerson: dbPersonType) => {
+      setDBTodos((prevPerson) => prevPerson.filter(person => person.id !== deletedPerson.id));
+      setIsPeopleSynced(true);
+      setRefreshData(true);
+      },
+      error: (error: any) => { console.warn('Error deleting Person:', error); },
     });
 
     return () => {
-      todoSubscription.unsubscribe();
-      personSubscription.unsubscribe();
+      todoCreateSub.unsubscribe();
+      todoUpdateSub.unsubscribe();
+      todoDeleteSub.unsubscribe();
+
+      peopleCreateSub.unsubscribe();
+      peopleUpdateSub.unsubscribe();
+      peopleDeleteSub.unsubscribe();
     };
+    
   }, []);
 
   useEffect(() => {
