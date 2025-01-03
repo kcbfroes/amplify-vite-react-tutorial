@@ -112,8 +112,8 @@ export default function ListTodos() {
       id: todo.id,
       content: todo.content,
       isDone: todo.isDone,
-      ownerId: todo.ownerId,
-      assignedToId: todo.assignedToId,
+      ownerId: todo.ownerId ? todo.ownerId : null,
+      assignedToId: todo.assignedToId ? todo.assignedToId : null,
     })
       .then((result: any) => handleTodoResult(result, "Update a ToDo", todoKey))
       .catch((error: any) => handleTodoError(error, "Update a ToDo", todoKey));
