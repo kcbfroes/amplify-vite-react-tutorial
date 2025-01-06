@@ -26,6 +26,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [people, setPeople] = useState<Array<PersonType>>([]);
 
   const [refreshData, setRefreshData] = useState(false);
+  const [peopleLookup, setPeopleLookup] = useState<{ [key: string]: string | undefined }>({});
 
   useEffect(() => {
 
@@ -61,8 +62,65 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     const todoUpdateSub = client.models.Todo.onUpdate().subscribe({
       next: (updatedTodo: dbTodoType) => {
-        setDBTodos((prevTodo) =>  prevTodo.map((todo) => todo.id === updatedTodo.id ? updatedTodo : todo));
-        setRefreshData(true);
+        
+        //get the todo to update
+        const existingTodo = todos.find((todo) => todo.id === updatedTodo.id);
+        if (!existingTodo) {
+          console.warn(`Todo with id ${updatedTodo.id} not found`);
+          return;
+        }
+        const ownerChanged = existingTodo.ownerId !== updatedTodo.ownerId;
+        const assignedChanged = existingTodo.assignedToId !== updatedTodo.assignedToId;
+        var newOwnerName = "";
+        var newAssignedName = "";
+        /*
+          Did the ownerId change? If so, we need to update:
+            The ownerName of the Todo
+            The new person's owned todos list
+            The old person's owned todos list
+        */
+        if (ownerChanged) {          
+            const oldOwner = people.find(person => person.id === existingTodo.ownerId);
+            const newOwner = people.find(person => person.id === updatedTodo.ownerId);
+
+            if (oldOwner) {
+              oldOwner.ownedTodos = oldOwner.ownedTodos.filter(todo => todo.id !== updatedTodo.id);
+            }
+            if (newOwner) {
+              newOwner.ownedTodos.push(existingTodo);
+              newOwnerName = newOwner.name;
+            }
+          }
+          /*
+            Did the assignedToId change? If so, we need to update:
+              The assignedToName of the Todo
+              The new person's assignedTo todos list
+              The old person's assignedTo todos list
+          */
+          if (assignedChanged) {          
+              const oldAssigned = people.find(person => person.id === existingTodo.assignedToId);
+              const newAssigned = people.find(person => person.id === updatedTodo.assignedToId);
+  
+              if (oldAssigned) {
+                oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter(todo => todo.id !== updatedTodo.id);
+              }
+              if (newAssigned) {
+                newAssigned.assignedTodos.push(existingTodo);
+                newAssignedName = newAssigned.name;
+              }
+            }
+            
+        //Now, update the todo        
+        const newTodo: TodoType = {
+          ...updatedTodo,
+
+          ownerId: updatedTodo.ownerId ? String(updatedTodo.ownerId) : "",
+          ownerName: newOwnerName,
+
+          assignedToId: updatedTodo.assignedToId ? String(updatedTodo.assignedToId) : "",
+          assignedToName: newAssignedName,
+        }
+        setTodos((theTodo) => theTodo.map((todo) => todo.id === updatedTodo.id ? newTodo : todo));
       },
       error: (error: any) => { console.warn('Error updating Todo:', error); },
     });
@@ -111,12 +169,15 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {      
       if (refreshData) {
-
+        /*
+          The problem with this is it is updating the entire array of people and todos and we don't want that.
+        */
         const indexedPeople: { [key: string]: string | undefined } =
           dbPeople.reduce((indexedArray: { [key: string]: string }, person) => {
             indexedArray[person.id] = person.name;
             return indexedArray;
           }, {});
+          setPeopleLookup(indexedPeople);
 
         //RefreshTodos(indexedPeople);
         const newTodos = dbTodos.map((item) => ({
