@@ -29,14 +29,84 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [peopleLookup, setPeopleLookup] = useState<{ [key: string]: string | undefined }>({});
 
   useEffect(() => {
+    console.log("Todos updated:", todos);
+  }, [todos]);
 
+  const pointUpdateTodo = useCallback((updatedTodo: dbTodoType) => {        
+    console.log("pointUpdateTodo, Todos:", todos);
+    //get the todo to update
+    const existingTodo = todos.find((todo) => todo.id === updatedTodo.id);
+    if (!existingTodo) {
+      console.warn(`Todo with id ${updatedTodo.id} not found`);
+      return;
+    }
+    const ownerChanged = existingTodo.ownerId !== updatedTodo.ownerId;
+    const assignedChanged = existingTodo.assignedToId !== updatedTodo.assignedToId;
+    var newOwnerName = "";
+    var newAssignedName = "";
+    /*
+      Did the ownerId change? If so, we need to update:
+        The ownerName of the Todo
+        The new person's owned todos list
+        The old person's owned todos list
+    */
+    if (ownerChanged) {          
+        const oldOwner = people.find(person => person.id === existingTodo.ownerId);
+        const newOwner = people.find(person => person.id === updatedTodo.ownerId);
+
+        if (oldOwner) {
+          oldOwner.ownedTodos = oldOwner.ownedTodos.filter(todo => todo.id !== updatedTodo.id);
+        }
+        if (newOwner) {
+          newOwner.ownedTodos.push(existingTodo);
+          newOwnerName = newOwner.name;
+        }
+      }
+      /*
+        Did the assignedToId change? If so, we need to update:
+          The assignedToName of the Todo
+          The new person's assignedTo todos list
+          The old person's assignedTo todos list
+      */
+      if (assignedChanged) {          
+          const oldAssigned = people.find(person => person.id === existingTodo.assignedToId);
+          const newAssigned = people.find(person => person.id === updatedTodo.assignedToId);
+
+          if (oldAssigned) {
+            oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter(todo => todo.id !== updatedTodo.id);
+          }
+          if (newAssigned) {
+            newAssigned.assignedTodos.push(existingTodo);
+            newAssignedName = newAssigned.name;
+          }
+        }
+        
+    //Now, update the todo        
+    const newTodo: TodoType = {
+      ...updatedTodo,
+
+      ownerId: updatedTodo.ownerId ? String(updatedTodo.ownerId) : "",
+      ownerName: newOwnerName,
+
+      assignedToId: updatedTodo.assignedToId ? String(updatedTodo.assignedToId) : "",
+      assignedToName: newAssignedName,
+    }
+
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
+    );
+     
+  }, [people]);
+
+
+  useEffect(() => {
+    console.log("Init useEffect");
     const fetchTodos = async () => {
       const { data: todoList, errors }: { data: dbTodoType[], errors?: any } = await client.models.Todo.list();
       if (errors) {
         console.error(errors);
       } else {
         setDBTodos(todoList);
-        setRefreshData(true)
       }
     };
 
@@ -46,129 +116,81 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error(errors);
       } else {
         setDBPeople(peopleList);
-        setRefreshData(true);
       }
     };
 
-    fetchPeople().then(fetchTodos);
-
-    //Todo Subscriptions
-    const todoCreateSub = client.models.Todo.onCreate().subscribe({
-      next: (newTodo: dbTodoType) => {
-        setDBTodos((prevTodos) => [...prevTodos, newTodo]);
-        setRefreshData(true);
-      },
-      error: (error: any) => { console.warn('Error creating Todo:', error); },
-    });
-    const todoUpdateSub = client.models.Todo.onUpdate().subscribe({
-      next: (updatedTodo: dbTodoType) => {
-        
-        //get the todo to update
-        const existingTodo = todos.find((todo) => todo.id === updatedTodo.id);
-        if (!existingTodo) {
-          console.warn(`Todo with id ${updatedTodo.id} not found`);
-          return;
-        }
-        const ownerChanged = existingTodo.ownerId !== updatedTodo.ownerId;
-        const assignedChanged = existingTodo.assignedToId !== updatedTodo.assignedToId;
-        var newOwnerName = "";
-        var newAssignedName = "";
-        /*
-          Did the ownerId change? If so, we need to update:
-            The ownerName of the Todo
-            The new person's owned todos list
-            The old person's owned todos list
-        */
-        if (ownerChanged) {          
-            const oldOwner = people.find(person => person.id === existingTodo.ownerId);
-            const newOwner = people.find(person => person.id === updatedTodo.ownerId);
-
-            if (oldOwner) {
-              oldOwner.ownedTodos = oldOwner.ownedTodos.filter(todo => todo.id !== updatedTodo.id);
-            }
-            if (newOwner) {
-              newOwner.ownedTodos.push(existingTodo);
-              newOwnerName = newOwner.name;
-            }
-          }
-          /*
-            Did the assignedToId change? If so, we need to update:
-              The assignedToName of the Todo
-              The new person's assignedTo todos list
-              The old person's assignedTo todos list
-          */
-          if (assignedChanged) {          
-              const oldAssigned = people.find(person => person.id === existingTodo.assignedToId);
-              const newAssigned = people.find(person => person.id === updatedTodo.assignedToId);
-  
-              if (oldAssigned) {
-                oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter(todo => todo.id !== updatedTodo.id);
-              }
-              if (newAssigned) {
-                newAssigned.assignedTodos.push(existingTodo);
-                newAssignedName = newAssigned.name;
-              }
-            }
-            
-        //Now, update the todo        
-        const newTodo: TodoType = {
-          ...updatedTodo,
-
-          ownerId: updatedTodo.ownerId ? String(updatedTodo.ownerId) : "",
-          ownerName: newOwnerName,
-
-          assignedToId: updatedTodo.assignedToId ? String(updatedTodo.assignedToId) : "",
-          assignedToName: newAssignedName,
-        }
-        setTodos((theTodo) => theTodo.map((todo) => todo.id === updatedTodo.id ? newTodo : todo));
-      },
-      error: (error: any) => { console.warn('Error updating Todo:', error); },
-    });
-    const todoDeleteSub = client.models.Todo.onDelete().subscribe({
-      next: (deletedTodo: dbTodoType) => {
-      setDBTodos((prevTodos) => prevTodos.filter(todo => todo.id !== deletedTodo.id));
-      setRefreshData(true);
-      },
-      error: (error: any) => { console.warn('Error deleting Todo:', error); },
-    });    
-
-    //People Subscriptions
-    const peopleCreateSub = client.models.Person.onCreate().subscribe({
-      next: (newPerson: dbPersonType) => {
-        setDBPeople((prevPerson) => [...prevPerson, newPerson]);
-        setRefreshData(true);
-      },
-      error: (error: any) => { console.warn('Error creating Person:', error); },
-    });
-    const peopleUpdateSub = client.models.Person.onUpdate().subscribe({
-      next: (updatedPerson: dbPersonType) => {
-        setDBPeople((prevPeople) =>  prevPeople.map((person) => person.id === updatedPerson.id ? updatedPerson : person));
-        setRefreshData(true);
-      },
-      error: (error: any) => { console.warn('Error updating Person:', error); },
-    });
-    const peopleDeleteSub = client.models.Person.onDelete().subscribe({
-      next: (deletedPerson: dbPersonType) => {
-      setDBTodos((prevPerson) => prevPerson.filter(person => person.id !== deletedPerson.id));
-      setRefreshData(true);
-      },
-      error: (error: any) => { console.warn('Error deleting Person:', error); },
-    });
-
-    return () => {
-      todoCreateSub.unsubscribe();
-      todoUpdateSub.unsubscribe();
-      todoDeleteSub.unsubscribe();
-
-      peopleCreateSub.unsubscribe();
-      peopleUpdateSub.unsubscribe();
-      peopleDeleteSub.unsubscribe();
+    const initializeData = async () => {
+      await fetchPeople();
+      await fetchTodos();
+      console.log("Data Retrieved");
+      setRefreshData(true); // Ensure state is updated before subscriptions
     };
+
+    initializeData().then(() => {
+      console.log("Setting up subscriptions");
+      //Todo Subscriptions
+      const todoCreateSub = client.models.Todo.onCreate().subscribe({
+        next: (newTodo: dbTodoType) => {
+          setDBTodos((prevTodos) => [...prevTodos, newTodo]);
+          setRefreshData(true);
+        },
+        error: (error: any) => { console.warn('Error creating Todo:', error); },
+      });
+      const todoUpdateSub = client.models.Todo.onUpdate().subscribe({
+        next: (updatedTodo: dbTodoType) => {
+          console.log("Todo update subscription triggerd, updatedTodo", updatedTodo);
+          console.log("Todo update subscription triggerd, todos", todos);
+          pointUpdateTodo(updatedTodo);
+        },
+        error: (error: any) => { console.warn('Error updating Todo:', error); },
+      });
+      const todoDeleteSub = client.models.Todo.onDelete().subscribe({
+        next: (deletedTodo: dbTodoType) => {
+        setDBTodos((prevTodos) => prevTodos.filter(todo => todo.id !== deletedTodo.id));
+        setRefreshData(true);
+        },
+        error: (error: any) => { console.warn('Error deleting Todo:', error); },
+      });    
+
+      //People Subscriptions
+      const peopleCreateSub = client.models.Person.onCreate().subscribe({
+        next: (newPerson: dbPersonType) => {
+          setDBPeople((prevPerson) => [...prevPerson, newPerson]);
+          setRefreshData(true);
+        },
+        error: (error: any) => { console.warn('Error creating Person:', error); },
+      });
+      const peopleUpdateSub = client.models.Person.onUpdate().subscribe({
+        next: (updatedPerson: dbPersonType) => {
+          setDBPeople((prevPeople) =>  prevPeople.map((person) => person.id === updatedPerson.id ? updatedPerson : person));
+          setRefreshData(true);
+        },
+        error: (error: any) => { console.warn('Error updating Person:', error); },
+      });
+      const peopleDeleteSub = client.models.Person.onDelete().subscribe({
+        next: (deletedPerson: dbPersonType) => {
+        setDBTodos((prevPerson) => prevPerson.filter(person => person.id !== deletedPerson.id));
+        setRefreshData(true);
+        },
+        error: (error: any) => { console.warn('Error deleting Person:', error); },
+      });
+
+      return () => {
+        todoCreateSub.unsubscribe();
+        todoUpdateSub.unsubscribe();
+        todoDeleteSub.unsubscribe();
+
+        peopleCreateSub.unsubscribe();
+        peopleUpdateSub.unsubscribe();
+        peopleDeleteSub.unsubscribe();
+      };
+    });
     
   }, []);
 
   useEffect(() => {      
-      if (refreshData) {
+    console.log("Refresh Data useEffect: ", refreshData);  
+    if (refreshData) {
         /*
           The problem with this is it is updating the entire array of people and todos and we don't want that.
         */
