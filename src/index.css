@@ -3,7 +3,7 @@ body {
   background: linear-gradient(180deg, rgb(117, 81, 194), rgb(255, 255, 255));
   display: flex;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  height: 100vh;
+  height: auto;
   width: 100vw;
   justify-content: center;
   align-items: center;
