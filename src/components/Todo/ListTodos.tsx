@@ -12,7 +12,7 @@ import {
   useTheme,
 } from "@aws-amplify/ui-react";
 import TodoTS from "./TodoTS";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Modal from "../Modal";
 import TodoDeleteConfirm from "./TodoDeleteConfirm";
 import PersonSelect from "../Person/PersonSelect";
@@ -40,6 +40,10 @@ export default function ListTodos() {
   const [personSelectedUpdateOption, setPersonSelectedUpdateOption] = useState("");
   const [selectPersonLabel, setSelectPersonLabel] = useState("");
 
+  useEffect(() => {
+    console.log("ListTodos: Todos updated:", todos);
+  }, [todos]);
+  
   //------------------------------ Create ------------------------------
   const newTodo = () => {
     if (createOpen) {
@@ -68,7 +72,7 @@ export default function ListTodos() {
 
   //------------------------------ Edit/Update ------------------------------
   const editTodo = (todo: TodoType) => {
-    setTodo(todo);
+    setTodo({ ...todo });
     setEditOpen(true);
   };
   const editTodoClose = (
@@ -135,13 +139,14 @@ export default function ListTodos() {
   const onChangeOwner = (todo: TodoType) => {
     setPersonSelectOpen(true);
     setPersonSelectedUpdateOption("owner");
-    setTodo(todo);
+    console.log("Change Owner: todo: ", todo);
+    setTodo({ ...todo });
     setSelectPersonLabel("Select an Owner for '" + todo.content + "' To Do");
   };
   const onChangeAssignedTo = (todo: TodoType) => {
     setPersonSelectOpen(true);
     setPersonSelectedUpdateOption("assigned");
-    setTodo(todo);
+    setTodo({ ...todo });
     setSelectPersonLabel("Assign a Person to '" + todo.content + "' To Do");
   };
   const selectedPerson = (personId: string) => {

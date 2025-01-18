@@ -12,7 +12,7 @@ import {
   Button,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Modal from "../Modal";
 import PersonDeleteConfirm from "./PersonDeleteConfirm";
 import { AppDataContext } from "../../context/AppDataContext";
@@ -35,6 +35,10 @@ export default function PersonList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    console.log("PersonList: People updated:", people);
+  }, [people]);
 
   //------------------------------ Create ------------------------------
   const newPerson = () => {
