@@ -20,9 +20,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const client = generateClient<Schema>();
 
   const [todos, setTodos] = useState<Array<TodoType>>([]);
-
   const [people, setPeople] = useState<Array<PersonType>>([]);
-
   const [setUpSubs, setSetUpSubs] = useState(false);
 
   useEffect(() => {
@@ -37,76 +35,6 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       SetUpSubs();  
     }
   }, [setUpSubs]);
-
-  const pointUpdateTodo = useCallback((updatedTodo: dbTodoType) => {        
-    console.log("AppContext: pointUpdateTodo, Todos:", todos);
-    
-    //get the app todo that needs updating
-    const appTodo = todos.find((todo) => todo.id === updatedTodo.id);
-    if (!appTodo) {
-      console.warn(`Todo with id ${updatedTodo.id} not found`);
-      return;
-    }
-    //if the owner/assignedTo changed, the new Id will be in newOwnerId/newAssignedToId of the app todo
-    const ownerChanged = appTodo.ownerId !== updatedTodo.ownerId;
-    const assignedChanged = appTodo.assignedToId !== updatedTodo.assignedToId;
-    var newOwnerName = appTodo.ownerName;
-    var newAssignedName = appTodo.assignedToName;
-
-    /*
-      Did the ownerId change? If so, we need to update:
-        The ownerName of the Todo
-        The new person's owned todos list
-        The old person's owned todos list
-    */
-    if (ownerChanged) {
-            
-      const oldOwner = people.find(person => person.id === appTodo.ownerId);
-      const newOwner = people.find(person => person.id === updatedTodo.ownerId);
-
-      if (oldOwner) {
-        oldOwner.ownedTodos = oldOwner.ownedTodos.filter(todo => todo.id !== updatedTodo.id);
-      }
-      if (newOwner) {
-        newOwner.ownedTodos.push(appTodo);
-        newOwnerName = newOwner.name;
-      }
-    }
-    /*
-      Did the assignedToId change? If so, we need to update:
-        The assignedToName of the Todo
-        The new person's assignedTo todos list
-        The old person's assignedTo todos list
-    */
-    if (assignedChanged) {          
-        const oldAssigned = people.find(person => person.id === appTodo.assignedToId);
-        const newAssigned = people.find(person => person.id === updatedTodo.assignedToId);
-
-        if (oldAssigned) {
-          oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter(todo => todo.id !== updatedTodo.id);
-        }
-        if (newAssigned) {
-          newAssigned.assignedTodos.push(appTodo);
-          newAssignedName = newAssigned.name;
-        }
-      }
-        
-    //Now, update the todo        
-    const newTodo: TodoType = {
-      ...updatedTodo,
-
-      ownerId: updatedTodo.ownerId ?? "",
-      ownerName: newOwnerName,
-
-      assignedToId: updatedTodo.assignedToId ?? "",
-      assignedToName: newAssignedName,
-    }
-
-    setTodos((prevTodos) =>
-      prevTodos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
-    );
-     
-  }, [people, todos]);
 
   //One useEffect to rule them all
   useEffect(() => {
@@ -183,6 +111,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     const todoCreateSub = client.models.Todo.onCreate().subscribe({
       next: (newTodo: dbTodoType) => {
         console.log("AppContext: todoCreateSub fired", newTodo);
+        pointNewTodo(newTodo);
       },
       error: (error: any) => { console.warn('useEffect2: Error creating Todo:', error); },
     });
@@ -196,6 +125,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     const todoDeleteSub = client.models.Todo.onDelete().subscribe({
       next: (deletedTodo: dbTodoType) => {
         console.log("AppContext: todoDeleteSub fired", deletedTodo);
+        pointDeleteTodo(deletedTodo);
       },
       error: (error: any) => { console.warn('useEffect2: Error deleting Todo:', error); },
     });    
@@ -231,6 +161,118 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       peopleDeleteSub.unsubscribe();
     };
   }, [people, todos]);
+
+  const pointNewTodo = useCallback((newTodo: dbTodoType) => {
+    
+    const indexedPeople: { [key: string]: string | undefined } =
+        people.reduce((indexedArray: { [key: string]: string }, person) => {
+          indexedArray[person.id] = person.name;
+          return indexedArray;
+        }, {});
+
+    const appTodo: TodoType = {
+      ...newTodo,
+
+      ownerId: newTodo.ownerId ?? "",
+      ownerName: newTodo.ownerId ? indexedPeople[newTodo.ownerId] : "",
+
+      assignedToId: newTodo.assignedToId ?? "",
+      assignedToName: newTodo.assignedToId ? indexedPeople[newTodo.assignedToId] : "",
+    }
+
+    setTodos((prevTodos) => [...prevTodos, appTodo]);
+
+    if (newTodo.ownerId) {
+      const owner = people.find(person => person.id === newTodo.ownerId);
+      owner?.ownedTodos.push(appTodo);
+    }
+
+    if (newTodo.assignedToId) {
+      const assigned = people.find(person => person.id === newTodo.assignedToId);
+      assigned?.assignedTodos.push(appTodo);
+    }
+
+  }, [people, todos]);
+
+  const pointUpdateTodo = useCallback((updatedTodo: dbTodoType) => {        
+    console.log("AppContext: pointUpdateTodo, Todos:", todos);
+    
+    //get the app todo that needs updating
+    const appTodo = todos.find((todo) => todo.id === updatedTodo.id);
+    if (!appTodo) {
+      console.warn(`Todo with id ${updatedTodo.id} not found`);
+      return;
+    }
+    //if the owner/assignedTo changed, the new Id will be in newOwnerId/newAssignedToId of the app todo
+    const ownerChanged = appTodo.ownerId !== updatedTodo.ownerId;
+    const assignedChanged = appTodo.assignedToId !== updatedTodo.assignedToId;
+    var newOwnerName = appTodo.ownerName;
+    var newAssignedName = appTodo.assignedToName;
+
+    /*
+      Did the ownerId change? If so, we need to update:
+        The ownerName of the Todo
+        The new person's owned todos list
+        The old person's owned todos list
+    */
+    if (ownerChanged) {
+            
+      const oldOwner = people.find(person => person.id === appTodo.ownerId);
+      const newOwner = people.find(person => person.id === updatedTodo.ownerId);
+
+      if (oldOwner) {
+        oldOwner.ownedTodos = oldOwner.ownedTodos.filter(todo => todo.id !== updatedTodo.id);
+      }
+      if (newOwner) {
+        newOwner.ownedTodos.push(appTodo);
+        newOwnerName = newOwner.name;
+      }
+    }
+    /*
+      Did the assignedToId change? If so, we need to update:
+        The assignedToName of the Todo
+        The new person's assignedTo todos list
+        The old person's assignedTo todos list
+    */
+    if (assignedChanged) {          
+        const oldAssigned = people.find(person => person.id === appTodo.assignedToId);
+        const newAssigned = people.find(person => person.id === updatedTodo.assignedToId);
+
+        if (oldAssigned) {
+          oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter(todo => todo.id !== updatedTodo.id);
+        }
+        if (newAssigned) {
+          newAssigned.assignedTodos.push(appTodo);
+          newAssignedName = newAssigned.name;
+        }
+      }
+        
+    //Now, update the todo        
+    const newTodo: TodoType = {
+      ...updatedTodo,
+
+      ownerId: updatedTodo.ownerId ?? "",
+      ownerName: newOwnerName,
+
+      assignedToId: updatedTodo.assignedToId ?? "",
+      assignedToName: newAssignedName,
+    }
+
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
+    );
+     
+  }, [people, todos]);
+
+  const pointDeleteTodo = useCallback((deletedTodo: dbTodoType) => {        
+    
+    const owner = people.find(person => person.id === deletedTodo.ownerId);
+    const assigned = people.find(person => person.id === deletedTodo.assignedToId);
+
+    if (owner) owner.ownedTodos = owner.ownedTodos.filter(todo => todo.id !== deletedTodo.id);
+    if (assigned) assigned.assignedTodos = assigned.assignedTodos.filter(todo => todo.id !== deletedTodo.id);
+
+  }, [people]);
 
   return (
     <AppDataContext.Provider value={{ client, todos, people}}>
