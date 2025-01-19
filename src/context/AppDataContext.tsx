@@ -62,6 +62,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
+    //DEFINE a function to get data from the DB, then convert to something the app can use
     const initializeData = async () => {
       console.log("AppContext: Fetching Data");
       await fetchPeople();
@@ -71,6 +72,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       ConvertToAppData();
     };
 
+    //Actually CALL the function to get the data and convert it
     initializeData().then(() => {
       console.log("AppContext: Data has been Initialized and Converted");
       setSetUpSubs(true); // Ensure state is updated before subscriptions
