@@ -37,7 +37,7 @@ export default function PersonList() {
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    console.log("PersonList: People updated:", people);
+    console.log("PersonList. People useEffect:", people);
   }, [people]);
 
   //------------------------------ Create ------------------------------

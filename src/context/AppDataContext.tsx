@@ -24,14 +24,14 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [setUpSubs, setSetUpSubs] = useState(false);
 
   useEffect(() => {
-    console.log("AppContext: Todos updated:", todos);
+    console.log("AppContext: Todos useEffect:", todos);
   }, [todos]);
   useEffect(() => {
-    console.log("AppContext: People updated:", people);
+    console.log("AppContext: People useEffect:", people);
   }, [people]);
   useEffect(() => {    
     if (setUpSubs) {
-      console.log("AppContext: Time to setUpSubs");
+      console.log("AppContext: Time to useEffect");
       SetUpSubs();  
     }
   }, [setUpSubs]);
@@ -112,21 +112,21 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     //Todo Subscriptions
     const todoCreateSub = client.models.Todo.onCreate().subscribe({
       next: (newTodo: dbTodoType) => {
-        console.log("AppContext: todoCreateSub fired", newTodo);
+        console.log("AppContext: todoCreateSub fired");
         pointNewTodo(newTodo);
       },
       error: (error: any) => { console.warn('useEffect2: Error creating Todo:', error); },
     });
     const todoUpdateSub = client.models.Todo.onUpdate().subscribe({
       next: (updatedTodo: dbTodoType) => {
-        console.log("AppContext: todoUpdateSub fired", todoUpdateSub);
+        console.log("AppContext: todoUpdateSub fired");
         pointUpdateTodo(updatedTodo);
       },
       error: (error: any) => { console.warn('useEffect2: Error updating Todo:', error); },
     });
     const todoDeleteSub = client.models.Todo.onDelete().subscribe({
       next: (deletedTodo: dbTodoType) => {
-        console.log("AppContext: todoDeleteSub fired", deletedTodo);
+        console.log("AppContext: todoDeleteSub fired");
         pointDeleteTodo(deletedTodo);
       },
       error: (error: any) => { console.warn('useEffect2: Error deleting Todo:', error); },
@@ -135,19 +135,19 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     //People Subscriptions
     const peopleCreateSub = client.models.Person.onCreate().subscribe({
       next: (newPerson: dbPersonType) => {
-        console.log("AppContext: peopleCreateSub fired", newPerson);
+        console.log("AppContext: peopleCreateSub fired");
       },
       error: (error: any) => { console.warn('useEffect2: Error creating Person:', error); },
     });
     const peopleUpdateSub = client.models.Person.onUpdate().subscribe({
       next: (updatedPerson: dbPersonType) => {
-        console.log("AppContext: peopleUpdateSub fired", updatedPerson);
+        console.log("AppContext: peopleUpdateSub fired");
       },
       error: (error: any) => { console.warn('useEffect2: Error updating Person:', error); },
     });
     const peopleDeleteSub = client.models.Person.onDelete().subscribe({
       next: (deletedPerson: dbPersonType) => {
-        console.log("AppContext: peopleDeleteSub fired", deletedPerson);
+        console.log("AppContext: peopleDeleteSub fired");
       },
       error: (error: any) => { console.warn('useEffect2: Error deleting Person:', error); },
     });
@@ -196,9 +196,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   }, [people, todos]);
 
-  const pointUpdateTodo = useCallback((updatedTodo: dbTodoType) => {        
-    console.log("AppContext: pointUpdateTodo, Todos:", todos);
-    
+  const pointUpdateTodo = useCallback((updatedTodo: dbTodoType) => {    
     //get the app todo that needs updating
     const appTodo = todos.find((todo) => todo.id === updatedTodo.id);
     if (!appTodo) {
@@ -210,6 +208,14 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
     const assignedChanged = appTodo.assignedToId !== updatedTodo.assignedToId;
     var newOwnerName = appTodo.ownerName;
     var newAssignedName = appTodo.assignedToName;
+    
+    console.log(
+      "AppContext: pointUpdateTodo. currOwnerId: %s, newOwnerId: %s. currAssigned: %s, newAssigned: %s",
+      appTodo.ownerId?.substring(0, 3),
+      updatedTodo.ownerId?.substring(0, 3),
+      appTodo.assignedToId?.substring(0, 3),
+      updatedTodo.assignedToId?.substring(0, 3)
+    );
 
     /*
       Did the ownerId change? If so, we need to update:
@@ -260,8 +266,15 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
       assignedToName: newAssignedName,
     }
 
+    /*Good to know: "prevTodos" represents the previous state of the state var todos
+      But we don't need to use it here becasue todos was NOT updated by the DB update.
+      This state shit is so confusing! I don't like creating "magical" variables by prepending "prev".
     setTodos((prevTodos) =>
       prevTodos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
+    );
+    */
+   setTodos((todos) =>
+      todos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
     );
      
   }, [people, todos]);

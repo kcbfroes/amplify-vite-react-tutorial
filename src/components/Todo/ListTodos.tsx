@@ -41,9 +41,9 @@ export default function ListTodos() {
   const [selectPersonLabel, setSelectPersonLabel] = useState("");
 
   useEffect(() => {
-    console.log("ListTodos: Todos updated:", todos);
+    console.log("ListTodos: Todos useEffect:", todos);
   }, [todos]);
-  
+
   //------------------------------ Create ------------------------------
   const newTodo = () => {
     if (createOpen) {
@@ -139,7 +139,6 @@ export default function ListTodos() {
   const onChangeOwner = (todo: TodoType) => {
     setPersonSelectOpen(true);
     setPersonSelectedUpdateOption("owner");
-    console.log("Change Owner: todo: ", todo);
     setTodo({ ...todo });
     setSelectPersonLabel("Select an Owner for '" + todo.content + "' To Do");
   };
@@ -158,6 +157,14 @@ export default function ListTodos() {
       throw new Error("Person Selected but no Todo is set");
     }
 
+    console.log(
+      "ListTodos. Changing %s. NewId: %s, OwnerId: %s. Assigned: %s",
+      personSelectedUpdateOption,
+      personId.substring(0, 3),
+      todo.ownerId?.substring(0, 3),
+      todo.assignedToId?.substring(0, 3)
+    );
+    
     if (personSelectedUpdateOption == "owner") {
       todo.ownerId = personId;
     } else if (personSelectedUpdateOption == "assigned") {
