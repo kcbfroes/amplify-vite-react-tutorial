@@ -196,88 +196,100 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   }, [people, todos]);
 
-  const pointUpdateTodo = useCallback((updatedTodo: dbTodoType) => {    
+  const pointUpdateTodo = (updatedTodo: dbTodoType) => {    
     //get the app todo that needs updating
-    const appTodo = todos.find((todo) => todo.id === updatedTodo.id);
-    if (!appTodo) {
-      console.warn(`Todo with id ${updatedTodo.id} not found`);
-      return;
-    }
-    //if the owner/assignedTo changed, the new Id will be in newOwnerId/newAssignedToId of the app todo
-    const ownerChanged = appTodo.ownerId !== updatedTodo.ownerId;
-    const assignedChanged = appTodo.assignedToId !== updatedTodo.assignedToId;
-    var newOwnerName = appTodo.ownerName;
-    var newAssignedName = appTodo.assignedToName;
+    //const appTodo = todos.find((todo) => todo.id === updatedTodo.id);
+    //See the OneNote page: "Understanding the Functional Form of useState" for why we use the "callback form" of setTodos
+    setTodos((currTodos) => {
+      const appTodo = currTodos.find((todo) => todo.id === updatedTodo.id);
+      if (!appTodo) {
+        console.warn(`Todo with id ${updatedTodo.id} not found`);
+        return currTodos; // Return the current state unchanged
+      };
     
-    console.log(
-      "AppContext: pointUpdateTodo. currOwnerId: %s, newOwnerId: %s. currAssigned: %s, newAssigned: %s",
-      appTodo.ownerId?.substring(0, 3),
-      updatedTodo.ownerId?.substring(0, 3),
-      appTodo.assignedToId?.substring(0, 3),
-      updatedTodo.assignedToId?.substring(0, 3)
-    );
+      console.log(
+        "AppContext: pointUpdateTodo. appTodo. ownerId: %s (%s), assigned: %s (%s)",
+        appTodo.ownerId?.substring(0, 3),
+        appTodo.ownerName,
+        appTodo.assignedToId?.substring(0, 3),
+        appTodo.assignedToName,
+      );
+      //if the owner/assignedTo changed, the new Id will be in newOwnerId/newAssignedToId of the app todo
+      const ownerChanged = appTodo.ownerId !== updatedTodo.ownerId;
+      const assignedChanged = appTodo.assignedToId !== updatedTodo.assignedToId;
+      var newOwnerName = appTodo.ownerName;
+      var newAssignedName = appTodo.assignedToName;
+      
+      console.log(
+        "AppContext: pointUpdateTodo. currOwnerId: %s, newOwnerId: %s. currAssigned: %s, newAssigned: %s",
+        appTodo.ownerId?.substring(0, 3),
+        updatedTodo.ownerId?.substring(0, 3),
+        appTodo.assignedToId?.substring(0, 3),
+        updatedTodo.assignedToId?.substring(0, 3)
+      );
 
-    /*
-      Did the ownerId change? If so, we need to update:
-        The ownerName of the Todo
-        The new person's owned todos list
-        The old person's owned todos list
-    */
-    if (ownerChanged) {
-            
-      const oldOwner = people.find(person => person.id === appTodo.ownerId);
-      const newOwner = people.find(person => person.id === updatedTodo.ownerId);
+      /*
+        Did the ownerId change? If so, we need to update:
+          The ownerName of the Todo
+          The new person's owned todos list
+          The old person's owned todos list
+      */
+      if (ownerChanged) {
+              
+        const oldOwner = people.find((person) => person.id === appTodo.ownerId);
+        const newOwner = people.find((person) => person.id === updatedTodo.ownerId);
 
-      if (oldOwner) {
-        oldOwner.ownedTodos = oldOwner.ownedTodos.filter(todo => todo.id !== updatedTodo.id);
+        if (oldOwner) {
+          oldOwner.ownedTodos = oldOwner.ownedTodos.filter((todo) => todo.id !== updatedTodo.id);
+        }
+        if (newOwner) {
+          newOwner.ownedTodos = [...(newOwner.ownedTodos || []), appTodo];
+          newOwnerName = newOwner.name;
+        }
       }
-      if (newOwner) {
-        newOwner.ownedTodos.push(appTodo);
-        newOwnerName = newOwner.name;
-      }
-    }
-    /*
-      Did the assignedToId change? If so, we need to update:
-        The assignedToName of the Todo
-        The new person's assignedTo todos list
-        The old person's assignedTo todos list
-    */
-    if (assignedChanged) {          
-        const oldAssigned = people.find(person => person.id === appTodo.assignedToId);
-        const newAssigned = people.find(person => person.id === updatedTodo.assignedToId);
+      /*
+        Did the assignedToId change? If so, we need to update:
+          The assignedToName of the Todo
+          The new person's assignedTo todos list
+          The old person's assignedTo todos list
+      */
+      if (assignedChanged) {          
+        const oldAssigned = people.find((person) => person.id === appTodo.assignedToId);
+        const newAssigned = people.find((person) => person.id === updatedTodo.assignedToId);
 
         if (oldAssigned) {
-          oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter(todo => todo.id !== updatedTodo.id);
+          oldAssigned.assignedTodos = oldAssigned.assignedTodos.filter((todo) => todo.id !== updatedTodo.id);
         }
         if (newAssigned) {
-          newAssigned.assignedTodos.push(appTodo);
+          newAssigned.assignedTodos = [...(newAssigned.assignedTodos || []), appTodo];
           newAssignedName = newAssigned.name;
         }
       }
-        
-    //Now, update the todo        
-    const newTodo: TodoType = {
-      ...updatedTodo,
+          
+      //Now, update the todo        
+      const newTodo: TodoType = {
+        ...updatedTodo,
 
-      ownerId: updatedTodo.ownerId ?? "",
-      ownerName: newOwnerName,
+        ownerId: updatedTodo.ownerId ?? "",
+        ownerName: newOwnerName,
 
-      assignedToId: updatedTodo.assignedToId ?? "",
-      assignedToName: newAssignedName,
-    }
-
-    /*Good to know: "prevTodos" represents the previous state of the state var todos
-      But we don't need to use it here becasue todos was NOT updated by the DB update.
-      This state shit is so confusing! I don't like creating "magical" variables by prepending "prev".
-    setTodos((prevTodos) =>
-      prevTodos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
-    );
-    */
-   setTodos((todos) =>
-      todos.map((todo) => (todo.id === updatedTodo.id ? newTodo : todo))
-    );
-     
-  }, [people, todos]);
+        assignedToId: updatedTodo.assignedToId ?? "",
+        assignedToName: newAssignedName,
+      }
+      
+      console.log(
+        "AppContext: pointUpdateTodo. UpdatedTodo. ownerId: %s (%s), assigned: %s (%s)",
+        newTodo.ownerId?.substring(0, 3),
+        newTodo.ownerName,
+        newTodo.assignedToId?.substring(0, 3),
+        newTodo.assignedToName,
+      );
+      
+      return currTodos.map((todo) =>
+        todo.id === updatedTodo.id ? newTodo : todo
+      );
+    });        
+  };
 
   const pointDeleteTodo = useCallback((deletedTodo: dbTodoType) => {        
     
