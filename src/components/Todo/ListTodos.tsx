@@ -12,7 +12,7 @@ import {
   useTheme,
 } from "@aws-amplify/ui-react";
 import TodoTS from "./TodoTS";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Modal from "../Modal";
 import TodoDeleteConfirm from "./TodoDeleteConfirm";
 import PersonSelect from "../Person/PersonSelect";
@@ -39,6 +39,10 @@ export default function ListTodos() {
   const [personSelectOpen, setPersonSelectOpen] = useState(false);
   const [personSelectedUpdateOption, setPersonSelectedUpdateOption] = useState("");
   const [selectPersonLabel, setSelectPersonLabel] = useState("");
+
+  useEffect(() => {
+    console.log("ListTodos: Todos useEffect:", todos);
+  }, [todos]);
 
   //------------------------------ Create ------------------------------
   const newTodo = () => {
@@ -68,7 +72,7 @@ export default function ListTodos() {
 
   //------------------------------ Edit/Update ------------------------------
   const editTodo = (todo: TodoType) => {
-    setTodo(todo);
+    setTodo({ ...todo });
     setEditOpen(true);
   };
   const editTodoClose = (
@@ -135,13 +139,13 @@ export default function ListTodos() {
   const onChangeOwner = (todo: TodoType) => {
     setPersonSelectOpen(true);
     setPersonSelectedUpdateOption("owner");
-    setTodo(todo);
+    setTodo({ ...todo });
     setSelectPersonLabel("Select an Owner for '" + todo.content + "' To Do");
   };
   const onChangeAssignedTo = (todo: TodoType) => {
     setPersonSelectOpen(true);
     setPersonSelectedUpdateOption("assigned");
-    setTodo(todo);
+    setTodo({ ...todo });
     setSelectPersonLabel("Assign a Person to '" + todo.content + "' To Do");
   };
   const selectedPerson = (personId: string) => {
@@ -153,6 +157,14 @@ export default function ListTodos() {
       throw new Error("Person Selected but no Todo is set");
     }
 
+    console.log(
+      "ListTodos. Changing %s. NewId: %s, OwnerId: %s. Assigned: %s",
+      personSelectedUpdateOption,
+      personId.substring(0, 3),
+      todo.ownerId?.substring(0, 3),
+      todo.assignedToId?.substring(0, 3)
+    );
+    
     if (personSelectedUpdateOption == "owner") {
       todo.ownerId = personId;
     } else if (personSelectedUpdateOption == "assigned") {
