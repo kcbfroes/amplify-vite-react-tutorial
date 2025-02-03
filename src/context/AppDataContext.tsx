@@ -196,7 +196,7 @@ export const AppDataProvider: React.FC<{ children: React.ReactNode }> = ({
 
   }, [people, todos]);
 
-  const pointUpdateTodo = (updatedTodo: dbTodoType) => {    
+  const pointUpdateTodo = (updatedTodo: dbTodoType) => {
     //get the app todo that needs updating
     //const appTodo = todos.find((todo) => todo.id === updatedTodo.id);
     //See the OneNote page: "Understanding the Functional Form of useState" for why we use the "callback form" of setTodos

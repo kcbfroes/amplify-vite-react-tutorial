@@ -21,9 +21,6 @@ import PersonList from "./components/Person/PersonList";
 import { AppDataContext } from "./context/AppDataContext";
 
 function App() {
-  const context = useContext(AppDataContext);
-  if (!context) throw new Error("AppContext is not available");
-  const { allDataSynced } = context;
 
   //Navigation
   const [currentNavItem, setCurrentNavItem] = useState("ToDos");
@@ -80,14 +77,6 @@ function App() {
     }
   };
 
-  const showDataLoading = () => {
-    if (allDataSynced == true) {
-      return <Text variation="success">All data is loaded</Text>;
-    } else {
-      return <Text variation="info">data is loading...</Text>;
-    }
-  };
-
   //------------------------------ UI ------------------------------
   return (
     <Authenticator>
@@ -127,9 +116,7 @@ function App() {
             >
               <Card columnStart="1">{navigationMenu()}</Card>
               <Card columnStart="2">{mainContent()}</Card>
-              <Card columnStart="1" columnEnd="-1">
-                {showDataLoading()}
-              </Card>
+              <Card columnStart="1" columnEnd="-1"></Card>
             </Grid>
           </main>
         </React.Fragment>
