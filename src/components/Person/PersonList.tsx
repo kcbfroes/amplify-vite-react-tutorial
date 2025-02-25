@@ -12,10 +12,11 @@ import {
   Button,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import Modal from "../Modal";
 import PersonDeleteConfirm from "./PersonDeleteConfirm";
 import { AppDataContext } from "../../context/AppDataContext";
+import DataTableComponent from "./DataTableComponent.tsx";
 
 export default function PersonList() {
   const context = useContext(AppDataContext);
@@ -42,7 +43,12 @@ export default function PersonList() {
 
   //------------------------------ Create ------------------------------
   const newPerson = () => {
-    if (createOpen) {
+    return createOpen ? (
+      <Modal>
+        <PersonTS handleOnClose={createPerson} />
+      </Modal>
+    ) : null;
+    /*if (createOpen) {
       return (
         <Modal>
           <PersonTS handleOnClose={createPerson} />
@@ -50,12 +56,13 @@ export default function PersonList() {
       );
     } else {
       return <></>;
-    }
+    }*/
   };
   const createPerson = (aPerson: Partial<PersonType>, cancelled: boolean) => {
     if (!cancelled) {
-      const key: string = "" + aPerson.name;
-      client.models.Person.create({ name: "" + aPerson.name })
+      //const key: string = "" + aPerson.name;
+      const key = `${aPerson.name}`;
+      client.models.Person.create({ /*name: "" + aPerson.name*/ name: key })
         .then((result: any) => handleResult(result, "Create a Person", key))
         .catch((error: GraphQLFormattedError[]) =>
           handleError(error, "Create a Person", key)
@@ -195,7 +202,12 @@ export default function PersonList() {
 
         {newPerson()}
 
-        <Table variation="bordered">
+        <DataTableComponent
+          editPerson={editPerson}
+          confirmDelete={confirmDelete}
+        />
+
+        {/*<Table variation="bordered">
           <TableHead>
             <TableRow>
               <TableCell as="th">Name</TableCell>
@@ -240,7 +252,7 @@ export default function PersonList() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table>*/}
 
         {ShowEditPopup()}
         {showDeleteConfirm()}
